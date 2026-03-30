@@ -1,0 +1,284 @@
+package com.paf.smarthub.auth.service;
+
+import com.paf.smarthub.auth.dto.*;
+import com.paf.smarthub.auth.entity.User;
+import com.paf.smarthub.auth.repository.UserRepository;
+import com.paf.smarthub.auth.security.JwtTokenProvider;
+import com.paf.smarthub.shared.enums.AuthProvider;
+import com.paf.smarthub.shared.enums.Role;
+import com.paf.smarthub.shared.exception.AccessDeniedException;
+import com.paf.smarthub.shared.exception.DuplicateResourceException;
+import com.paf.smarthub.shared.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Service layer for user management operations.
+ * Handles registration, authentication, profile retrieval, role updates, and account management.
+ */
+@Service
+@Transactional
+public class UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtTokenProvider jwtTokenProvider) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
+
+    // ==================== Registration & Authentication ====================
+
+    /**
+     * Register a new user with email/password.
+     * Always assigns the USER role.
+     *
+     * @param request the signup request containing name, email, password
+     * @return AuthResponse with JWT token and user profile
+     */
+    public AuthResponse registerUser(SignupRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("User", "email", request.getEmail());
+        }
+
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail().toLowerCase().trim())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.USER)
+                .authProvider(AuthProvider.LOCAL)
+                .enabled(true)
+                .build();
+
+        User savedUser = userRepository.save(user);
+        log.info("New user registered: {} (role: USER)", savedUser.getEmail());
+
+        String token = jwtTokenProvider.generateToken(savedUser.getEmail(), savedUser.getRole().name());
+
+        return AuthResponse.builder()
+                .token(token)
+                .tokenType("Bearer")
+                .expiresIn(jwtTokenProvider.getExpirationMs())
+                .user(mapToDTO(savedUser))
+                .build();
+    }
+
+    /**
+     * Authenticate a user with email/password.
+     * Works for all roles (USER, ADMIN, TECHNICIAN).
+     *
+     * @param request the login request containing email and password
+     * @return AuthResponse with JWT token and user profile
+     */
+    public AuthResponse authenticateUser(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail().toLowerCase().trim())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getEmail()));
+
+        // Verify the user has a password (not an OAuth2-only account)
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new AccessDeniedException(
+                    "This account was created with Google sign-in. Please use Google to log in.");
+        }
+
+        // Verify password
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new AccessDeniedException("Invalid email or password.");
+        }
+
+        // Verify account is enabled
+        if (!user.isEnabled()) {
+            throw new AccessDeniedException("Your account has been disabled. Please contact an administrator.");
+        }
+
+        String token = jwtTokenProvider.generateToken(user.getEmail(), user.getRole().name());
+        log.info("User authenticated: {} (role: {})", user.getEmail(), user.getRole());
+
+        return AuthResponse.builder()
+                .token(token)
+                .tokenType("Bearer")
+                .expiresIn(jwtTokenProvider.getExpirationMs())
+                .user(mapToDTO(user))
+                .build();
+    }
+
+    // ==================== Profile Retrieval ====================
+
+    /**
+     * Get the authenticated user's profile by email.
+     *
+     * @param email the user's email (from JWT)
+     * @return the user's profile DTO
+     */
+    @Transactional(readOnly = true)
+    public UserDTO getCurrentUser(String email) {
+        User user = findUserByEmail(email);
+        return mapToDTO(user);
+    }
+
+    /**
+     * Get all users in the system (admin only).
+     *
+     * @return list of all user DTOs
+     */
+    @Transactional(readOnly = true)
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get a specific user by ID (admin only).
+     *
+     * @param userId the user's ID
+     * @return the user's profile DTO
+     */
+    @Transactional(readOnly = true)
+    public UserDTO getUserById(Long userId) {
+        User user = findUserById(userId);
+        return mapToDTO(user);
+    }
+
+    /**
+     * Get all users with a specific role (admin only).
+     * Useful for listing technicians when assigning to tickets.
+     *
+     * @param role the role to filter by
+     * @return list of user DTOs with the specified role
+     */
+    @Transactional(readOnly = true)
+    public List<UserDTO> getUsersByRole(Role role) {
+        return userRepository.findByRole(role)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // ==================== Admin Operations ====================
+
+    /**
+     * Update a user's role (admin only).
+     * Prevents admins from demoting themselves.
+     *
+     * @param userId       the target user's ID
+     * @param newRole      the new role to assign
+     * @param currentEmail the admin performing the action (for self-demotion prevention)
+     * @return the updated user DTO
+     */
+    public UserDTO updateUserRole(Long userId, Role newRole, String currentEmail) {
+        User targetUser = findUserById(userId);
+
+        // Prevent self-demotion
+        if (targetUser.getEmail().equalsIgnoreCase(currentEmail) && newRole != Role.ADMIN) {
+            throw new AccessDeniedException("You cannot change your own role. " +
+                    "Another admin must perform this action.");
+        }
+
+        Role previousRole = targetUser.getRole();
+        targetUser.setRole(newRole);
+        User savedUser = userRepository.save(targetUser);
+
+        log.info("User role updated: {} from {} to {} (by {})",
+                targetUser.getEmail(), previousRole, newRole, currentEmail);
+
+        return mapToDTO(savedUser);
+    }
+
+    /**
+     * Disable a user account (admin only).
+     * Prevents admins from disabling themselves.
+     *
+     * @param userId       the target user's ID
+     * @param currentEmail the admin performing the action
+     * @return the updated user DTO
+     */
+    public UserDTO disableUser(Long userId, String currentEmail) {
+        User targetUser = findUserById(userId);
+
+        if (targetUser.getEmail().equalsIgnoreCase(currentEmail)) {
+            throw new AccessDeniedException("You cannot disable your own account.");
+        }
+
+        targetUser.setEnabled(false);
+        User savedUser = userRepository.save(targetUser);
+
+        log.info("User disabled: {} (by {})", targetUser.getEmail(), currentEmail);
+
+        return mapToDTO(savedUser);
+    }
+
+    /**
+     * Enable a previously disabled user account (admin only).
+     *
+     * @param userId the target user's ID
+     * @return the updated user DTO
+     */
+    public UserDTO enableUser(Long userId) {
+        User targetUser = findUserById(userId);
+        targetUser.setEnabled(true);
+        User savedUser = userRepository.save(targetUser);
+
+        log.info("User enabled: {}", targetUser.getEmail());
+
+        return mapToDTO(savedUser);
+    }
+
+    /**
+     * Delete a user account permanently (admin only).
+     * Prevents admins from deleting themselves.
+     *
+     * @param userId       the target user's ID
+     * @param currentEmail the admin performing the action
+     */
+    public void deleteUser(Long userId, String currentEmail) {
+        User targetUser = findUserById(userId);
+
+        if (targetUser.getEmail().equalsIgnoreCase(currentEmail)) {
+            throw new AccessDeniedException("You cannot delete your own account.");
+        }
+
+        userRepository.delete(targetUser);
+        log.info("User deleted: {} (by {})", targetUser.getEmail(), currentEmail);
+    }
+
+    // ==================== Helper Methods ====================
+
+    private User findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+    }
+
+    private User findUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+    }
+
+    /**
+     * Maps a User entity to a UserDTO.
+     * This method is package-private so it can be reused by other services in the auth package.
+     */
+    UserDTO mapToDTO(User user) {
+        return UserDTO.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .profileImageUrl(user.getProfileImageUrl())
+                .role(user.getRole())
+                .enabled(user.isEnabled())
+                .build();
+    }
+}

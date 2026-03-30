@@ -1,0 +1,92 @@
+# ===============================
+# SERVER CONFIG
+# ===============================
+server.port=8080
+
+# ===============================
+# APPLICATION NAME
+# ===============================
+spring.application.name=smart-campus-backend
+
+# ===============================
+# DATABASE CONFIG (MySQL)
+# ===============================
+spring.datasource.url=jdbc:mysql://localhost:3306/smart_campus_db?useSSL=false&allowPublicKeyRetrieval=true
+spring.datasource.username=root
+spring.datasource.password=ur password
+
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# ===============================
+# JPA / HIBERNATE CONFIG
+# ===============================
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+
+# ===============================
+# LOGGING (Optional but useful)
+# ===============================
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+
+# ===============================
+# SWAGGER / OPENAPI
+# ===============================
+springdoc.api-docs.path=/api-docs
+springdoc.swagger-ui.path=/swagger-ui
+
+# ===============================
+# FILE UPLOAD CONFIG (Tickets)
+# ===============================
+spring.servlet.multipart.enabled=true
+spring.servlet.multipart.max-file-size=5MB
+spring.servlet.multipart.max-request-size=15MB
+
+file.upload-dir=uploads/
+
+# ===============================
+# SECURITY (BASIC SETUP)
+# ===============================
+spring.security.user.name=admin
+spring.security.user.password=admin123
+
+# ===============================
+# OAUTH2 GOOGLE LOGIN
+# ===============================
+spring.security.oauth2.client.registration.google.client-id=ur clirnt id
+spring.security.oauth2.client.registration.google.client-secret=ur password
+spring.security.oauth2.client.registration.google.scope=openid,profile,email
+
+spring.security.oauth2.client.provider.google.issuer-uri=https://accounts.google.com
+
+# ===============================
+# CORS (Frontend connection)
+# ===============================
+app.cors.allowed-origins=http://localhost:5173
+
+# ===============================
+# JWT CONFIGURATION
+# ===============================
+# Base64-encoded secret key for HS512 — CHANGE IN PRODUCTION and use env variable
+app.jwt.secret=U21hcnRDYW1wdXNIdWIyMDI2U2VjdXJlSldUU2VjcmV0S2V5VGhhdElzTG9uZ0Vub3VnaEZvckhTNTEyQWxnb3JpdGhtISE=
+# Token expiry: 24 hours in milliseconds
+app.jwt.expiration-ms=86400000
+
+# ===============================
+# FRONTEND URL (OAuth2 redirect)
+# ===============================
+app.frontend.url=http://localhost:5173
+
+# ===============================
+# ADMIN EMAILS (auto-assign ADMIN role on first login)
+# Comma-separated list of emails that should get ADMIN role
+# ===============================
+app.admin.emails=
+
+# ===============================
+# CUSTOM APP SETTINGS
+# ===============================
+app.name=Smart Campus Resource Booking System
+app.default-role=USER
