@@ -241,7 +241,8 @@ public class FacilityService {
      */
     @Transactional
     public void deleteFacility(Long id) {
-        FacilityEntity facility = facilityRepository.findById(id)
+        // Verify facility exists
+        facilityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Facility not found with id: " + id));
 
         // Check if facility has active bookings
