@@ -71,11 +71,14 @@ public class FacilityController {
     // ==================== Authenticated Endpoints ====================
 
     /**
-     * Get all facilities.
+     * Get all facilities with optional filtering by type and status.
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<FacilityDTO.FacilityResponse>>> getAllFacilities() {
-        List<FacilityDTO.FacilityResponse> facilities = facilityService.getAllFacilities();
+    public ResponseEntity<ApiResponse<List<FacilityDTO.FacilityResponse>>> getAllFacilities(
+            @RequestParam(required = false) FacilityEnums.FacilityType type,
+            @RequestParam(required = false) FacilityEnums.FacilityStatus status) {
+        List<FacilityDTO.FacilityResponse> facilities = 
+                facilityService.getAllFacilitiesFiltered(type, status);
         return ResponseEntity.ok(
                 ApiResponse.success("Facilities retrieved successfully", facilities));
     }

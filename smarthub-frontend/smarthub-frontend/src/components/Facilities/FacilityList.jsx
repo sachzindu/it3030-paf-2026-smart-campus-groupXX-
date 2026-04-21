@@ -24,7 +24,7 @@ export default function FacilityList() {
   const [totalPages, setTotalPages] = useState(0);
   const [filters, setFilters] = useState({
     type: '',
-    status: 'ACTIVE',
+    status: '',
     search: '',
   });
 
@@ -176,7 +176,7 @@ export default function FacilityList() {
               No facilities found.
             </p>
             <p className="text-muted/60 text-xs mt-1">
-              {filters.search || filters.type || filters.status !== 'ACTIVE'
+              {filters.search || filters.type || filters.status
                 ? 'Try adjusting your filters.'
                 : 'No facilities available at the moment.'}
             </p>

@@ -101,6 +101,46 @@ public class FacilityService {
     }
 
     /**
+     * Get all facilities with optional filtering by type and status.
+     *
+     * @param type   filter by facility type (optional, null = all types)
+     * @param status filter by facility status (optional, null = all statuses)
+     * @return list of matching facility responses
+     */
+    @Transactional(readOnly = true)
+    public List<FacilityDTO.FacilityResponse> getAllFacilitiesFiltered(
+            FacilityEnums.FacilityType type,
+            FacilityEnums.FacilityStatus status) {
+        
+        // If no filters are provided, return all facilities
+        if (type == null && status == null) {
+            return getAllFacilities();
+        }
+        
+        // If only type filter is provided
+        if (type != null && status == null) {
+            return facilityRepository.findByFacilityType(type)
+                    .stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
+        
+        // If only status filter is provided
+        if (type == null && status != null) {
+            return facilityRepository.findByStatus(status)
+                    .stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
+        
+        // If both filters are provided
+        return facilityRepository.findByFacilityTypeAndStatus(type, status)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Search/filter facilities by keyword, type, status, capacity, and location.
      * All parameters are optional.
      *
