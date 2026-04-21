@@ -26,3 +26,19 @@ export const getBookingById = (id) => api.get(`/api/bookings/${id}`);
  * @param {Object} params - { status, facilityId }
  */
 
+export const getAllBookings = (params) =>
+  api.get('/api/bookings', { params });
+
+/**
+ * Approve or reject a booking (ADMIN only).
+ * @param {number} id - Booking ID
+ * @param {Object} data - { status: 'APPROVED'|'REJECTED', adminRemarks }
+ */
+export const reviewBooking = (id, data) =>
+  api.put(`/api/bookings/${id}/review`, data);
+
+/**
+ * Cancel a booking (owner only).
+ * @param {number} id - Booking ID
+ */
+export const cancelBooking = (id) => api.put(`/api/bookings/${id}/cancel`);
