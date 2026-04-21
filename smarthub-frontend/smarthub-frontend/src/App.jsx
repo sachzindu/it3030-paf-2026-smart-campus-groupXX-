@@ -8,6 +8,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import TechnicianDashboard from './pages/TechnicianDashboard';
 import UserDashboard from './pages/UserDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import FacilityList from './components/Facilities/FacilityList';
+import FacilityDetail from './components/Facilities/FacilityDetail';
+import FacilityForm from './components/Facilities/FacilityForm';
 
 /**
  * Root component handling all application routing.
@@ -59,6 +62,40 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['USER']}>
             <UserDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Facility Routes - Accessible to all authenticated users */}
+      <Route
+        path="/facilities"
+        element={
+          <ProtectedRoute>
+            <FacilityList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/facilities/:id"
+        element={
+          <ProtectedRoute>
+            <FacilityDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/facilities/new"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <FacilityForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/facilities/:id/edit"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <FacilityForm />
           </ProtectedRoute>
         }
       />
