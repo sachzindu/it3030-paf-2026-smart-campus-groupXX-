@@ -30,7 +30,7 @@ export default function FacilityFilter({ filters, onFilterChange, onSearch }) {
     setSearchInput('');
     onFilterChange({
       type: '',
-      status: 'ACTIVE',
+      status: '',
       search: '',
     });
   };

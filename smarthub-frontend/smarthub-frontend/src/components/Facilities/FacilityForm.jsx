@@ -251,6 +251,7 @@ export default function FacilityForm() {
                 className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               >
                 <option value="ACTIVE">Active</option>
+                <option value="MAINTENANCE">Maintenance</option>
                 <option value="OUT_OF_SERVICE">Out of Service</option>
               </select>
             </div>
