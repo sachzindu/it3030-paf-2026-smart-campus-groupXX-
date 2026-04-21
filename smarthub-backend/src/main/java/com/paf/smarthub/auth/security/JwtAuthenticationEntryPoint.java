@@ -23,6 +23,23 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
 
+     @Override
+    public void commence(HttpServletRequest request,
+                         HttpServletResponse response,
+                         AuthenticationException authException) throws IOException, ServletException {
+        log.warn("Unauthorized request to {}: {}", request.getRequestURI(), authException.getMessage());
+
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+        String json = String.format(
+                "{\"success\":false,\"message\":\"Authentication required. Please login to access this resource.\",\"timestamp\":\"%s\"}",
+                LocalDateTime.now());
+
+        PrintWriter writer = response.getWriter();
+        writer.write(json);
+        writer.flush();
+
    
     }
 }
