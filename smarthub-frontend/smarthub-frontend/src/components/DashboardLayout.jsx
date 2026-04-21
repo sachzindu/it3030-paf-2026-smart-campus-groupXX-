@@ -50,6 +50,7 @@ const ROLE_CONFIG = {
     dotColor: 'bg-primary',
     navItems: [
       { label: 'Dashboard', icon: DashboardIcon, path: '/dashboard/user' },
+      { label: 'Facilities', icon: FacilitiesIcon, path: '/facilities' },
     ],
   },
 };
