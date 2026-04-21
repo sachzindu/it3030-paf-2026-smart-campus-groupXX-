@@ -15,17 +15,16 @@ export default function FacilityForm() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    type: 'LECTURE_HALL',
+    facilityType: 'LECTURE_HALL',
     location: '',
     capacity: '',
-    amenities: [],
+    status: 'ACTIVE',
     imageUrl: '',
   });
 
   const [loading, setLoading] = useState(isEditMode);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [amenityInput, setAmenityInput] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
   // Fetch facility data if editing
@@ -38,10 +37,10 @@ export default function FacilityForm() {
           setFormData({
             name: facility.name || '',
             description: facility.description || '',
-            type: facility.type || 'LECTURE_HALL',
+            facilityType: facility.facilityType || 'LECTURE_HALL',
             location: facility.location || '',
             capacity: facility.capacity || '',
-            amenities: facility.amenities || [],
+            status: facility.status || 'ACTIVE',
             imageUrl: facility.imageUrl || '',
           });
         } catch (err) {
@@ -60,23 +59,6 @@ export default function FacilityForm() {
     setFormData((prev) => ({
       ...prev,
       [name]: name === 'capacity' ? parseInt(value) || '' : value,
-    }));
-  };
-
-  const handleAddAmenity = () => {
-    if (amenityInput.trim() && !formData.amenities.includes(amenityInput.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        amenities: [...prev.amenities, amenityInput.trim()],
-      }));
-      setAmenityInput('');
-    }
-  };
-
-  const handleRemoveAmenity = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      amenities: prev.amenities.filter((_, i) => i !== index),
     }));
   };
 
@@ -192,14 +174,15 @@ export default function FacilityForm() {
                   Facility Type *
                 </label>
                 <select
-                  name="type"
-                  value={formData.type}
+                  name="facilityType"
+                  value={formData.facilityType}
                   onChange={handleInputChange}
                   className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                 >
                   <option value="LECTURE_HALL">Lecture Hall</option>
                   <option value="LAB">Laboratory</option>
                   <option value="MEETING_ROOM">Meeting Room</option>
+                  <option value="AUDITORIUM">Auditorium</option>
                   <option value="EQUIPMENT">Equipment</option>
                 </select>
               </div>
@@ -256,46 +239,20 @@ export default function FacilityForm() {
               </div>
             </div>
 
-            {/* Amenities */}
+            {/* Status */}
             <div>
               <label className="block text-sm font-semibold text-ink mb-2">
-                Amenities
+                Status
               </label>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={amenityInput}
-                  onChange={(e) => setAmenityInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddAmenity())}
-                  className="flex-1 px-3.5 py-2.5 border border-border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                  placeholder="Add amenity (e.g., Projector)"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddAmenity}
-                  className="px-4 py-2.5 bg-primary text-white rounded-xl hover:shadow-lg hover:shadow-primary/25 transition font-medium"
-                >
-                  Add
-                </button>
-              </div>
-
-              {/* Amenities List */}
-              {formData.amenities.length > 0 && (
-                <div className="space-y-2">
-                  {formData.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center justify-between bg-surface p-3 rounded-xl border border-border">
-                      <span className="text-ink">{amenity}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAmenity(index)}
-                        className="text-danger hover:text-danger/90"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              >
+                <option value="ACTIVE">Active</option>
+                <option value="OUT_OF_SERVICE">Out of Service</option>
+              </select>
             </div>
           </div>
 

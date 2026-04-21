@@ -36,8 +36,10 @@ export default function FacilityList() {
 
       const response = await getAllFacilities(currentPage, pageSize, filters.type, filters.status);
       
-      setFacilities(response.data.content || []);
-      setTotalPages(response.data.totalPages || 0);
+      // API returns a simple list, not paginated response
+      const facilitiesList = response.data.data || response.data || [];
+      setFacilities(Array.isArray(facilitiesList) ? facilitiesList : []);
+      setTotalPages(1);
     } catch (err) {
       console.error('Error fetching facilities:', err);
       setError(err.response?.data?.message || 'Failed to load facilities');
