@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../DashboardLayout';
-import { getAllFacilities, searchFacilities } from '../../api/facilityApi';
+import { getAllFacilities, searchFacilities, deleteFacility } from '../../api/facilityApi';
 import FacilityCard from './FacilityCard';
 import FacilityFilter from './FacilityFilter';
 
@@ -91,6 +91,30 @@ export default function FacilityList() {
     navigate(`/facilities/${facilityId}`);
   };
 
+  // Navigate to edit facility (admin only)
+  const handleEditFacility = (facilityId) => {
+    navigate(`/facilities/${facilityId}/edit`);
+  };
+
+  // Delete facility (admin only)
+  const handleDeleteFacility = async (facilityId) => {
+    if (!window.confirm('Are you sure you want to delete this facility?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await deleteFacility(facilityId);
+      // Refresh the list
+      fetchFacilities();
+    } catch (err) {
+      console.error('Error deleting facility:', err);
+      setError(err.response?.data?.message || 'Failed to delete facility');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Navigate to create new facility (admin only)
   const handleCreateFacility = () => {
     navigate('/facilities/new');
@@ -168,6 +192,8 @@ export default function FacilityList() {
                   key={facility.id}
                   facility={facility}
                   onViewDetails={() => handleViewDetails(facility.id)}
+                  onEdit={() => handleEditFacility(facility.id)}
+                  onDelete={() => handleDeleteFacility(facility.id)}
                 />
               ))}
             </div>

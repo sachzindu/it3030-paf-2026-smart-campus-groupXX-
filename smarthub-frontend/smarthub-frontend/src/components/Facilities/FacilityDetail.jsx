@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../DashboardLayout';
-import { getFacilityById } from '../../api/facilityApi';
+import { getFacilityById, deleteFacility } from '../../api/facilityApi';
 import AvailabilityChecker from './AvailabilityChecker';
 
 /**
@@ -10,7 +11,9 @@ import AvailabilityChecker from './AvailabilityChecker';
  */
 export default function FacilityDetail() {
   const { id } = useParams();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = user?.role === 'ADMIN';
   const [facility, setFacility] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,6 +37,22 @@ export default function FacilityDetail() {
 
     fetchFacility();
   }, [id]);
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this facility?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await deleteFacility(id);
+      navigate('/facilities', { replace: true });
+    } catch (err) {
+      console.error('Error deleting facility:', err);
+      setError(err.response?.data?.message || 'Failed to delete facility');
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -214,16 +233,38 @@ export default function FacilityDetail() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <button
                 onClick={() => setShowAvailabilityChecker(true)}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-success to-success text-white rounded-xl hover:shadow-lg hover:shadow-success/25 transition font-medium"
+                className="flex-1 min-w-[200px] px-6 py-3 bg-gradient-to-r from-success to-success text-white rounded-xl hover:shadow-lg hover:shadow-success/25 transition font-medium"
               >
                 Check Availability
               </button>
+              {isAdmin && (
+                <>
+                  <button
+                    onClick={() => navigate(`/facilities/${facility.id}/edit`)}
+                    className="flex-1 min-w-[200px] px-6 py-3 bg-primary/10 text-primary hover:bg-primary/20 transition font-medium rounded-xl flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="flex-1 min-w-[200px] px-6 py-3 bg-danger/10 text-danger hover:bg-danger/20 transition font-medium rounded-xl flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => navigate('/facilities')}
-                className="flex-1 px-6 py-3 bg-surface text-ink hover:bg-border transition font-medium rounded-xl"
+                className="flex-1 min-w-[200px] px-6 py-3 bg-surface text-ink hover:bg-border transition font-medium rounded-xl"
               >
                 Back
               </button>

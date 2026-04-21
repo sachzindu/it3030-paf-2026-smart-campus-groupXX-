@@ -178,6 +178,67 @@ public class FacilityService {
         log.info("Facility deleted: {} (id: {})", entity.getName(), entity.getId());
     }
 
+    // ==================== Availability Check ====================
+
+    /**
+     * Check if a facility is available during a requested time slot.
+     *
+     * @param id the facility ID
+     * @param request the availability request with bookingDate, startTime, endTime
+     * @return availability response with status and message
+     */
+    @Transactional(readOnly = true)
+    public FacilityDTO.AvailabilityResponse checkAvailability(
+            Long id, FacilityDTO.AvailabilityRequest request) {
+
+        FacilityEntity facility = findEntityById(id);
+
+        // Check if facility is active
+        if (facility.getStatus() != FacilityEnums.FacilityStatus.ACTIVE) {
+            return FacilityDTO.AvailabilityResponse.builder()
+                    .available(false)
+                    .message("Facility is not currently active")
+                    .facilityOpenFrom(facility.getAvailableFrom())
+                    .facilityOpenUntil(facility.getAvailableTo())
+                    .requestedTimeSlot(request.getStartTime() + " - " + request.getEndTime())
+                    .build();
+        }
+
+        // Parse requested times
+        java.time.LocalTime requestedStart = java.time.LocalTime.parse(request.getStartTime());
+        java.time.LocalTime requestedEnd = java.time.LocalTime.parse(request.getEndTime());
+
+        // Check if facility has availability window set
+        if (facility.getAvailableFrom() == null || facility.getAvailableTo() == null) {
+            return FacilityDTO.AvailabilityResponse.builder()
+                    .available(true)
+                    .message("Facility is available (no time restrictions)")
+                    .facilityOpenFrom(null)
+                    .facilityOpenUntil(null)
+                    .requestedTimeSlot(request.getStartTime() + " - " + request.getEndTime())
+                    .build();
+        }
+
+        // Check if requested time slot is within facility's available window
+        boolean isAvailable = (requestedStart.isAfter(facility.getAvailableFrom()) ||
+                requestedStart.equals(facility.getAvailableFrom())) &&
+                (requestedEnd.isBefore(facility.getAvailableTo()) ||
+                        requestedEnd.equals(facility.getAvailableTo()));
+
+        String message = isAvailable
+                ? "Facility is available for the requested time slot"
+                : String.format("Facility is only available from %s to %s",
+                facility.getAvailableFrom(), facility.getAvailableTo());
+
+        return FacilityDTO.AvailabilityResponse.builder()
+                .available(isAvailable)
+                .message(message)
+                .facilityOpenFrom(facility.getAvailableFrom())
+                .facilityOpenUntil(facility.getAvailableTo())
+                .requestedTimeSlot(request.getStartTime() + " - " + request.getEndTime())
+                .build();
+    }
+
     // ==================== Helper Methods ====================
 
     /**
