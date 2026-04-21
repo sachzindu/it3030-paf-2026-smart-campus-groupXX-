@@ -112,25 +112,19 @@ export default function AvailabilityChecker({ facilityId, onClose }) {
 
           {/* Result */}
           {result && (
-            <div className={`p-4 rounded-xl ${result.isAvailable ? 'bg-success/10 border border-success/20' : 'bg-danger/10 border border-danger/20'}`}>
-              <p className={`font-medium ${result.isAvailable ? 'text-success' : 'text-danger'}`}>
-                {result.isAvailable ? '✓ Available!' : '✗ Not Available'}
+            <div className={`p-4 rounded-xl ${result.available ? 'bg-success/10 border border-success/20' : 'bg-danger/10 border border-danger/20'}`}>
+              <p className={`font-medium ${result.available ? 'text-success' : 'text-danger'}`}>
+                {result.available ? '✓ Available!' : '✗ Not Available'}
               </p>
               {result.message && (
-                <p className={`text-sm mt-2 ${result.isAvailable ? 'text-success' : 'text-danger'}`}>
+                <p className={`text-sm mt-2 ${result.available ? 'text-success' : 'text-danger'}`}>
                   {result.message}
                 </p>
               )}
-              {result.conflicts && result.conflicts.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-sm font-medium mb-2 text-ink">Conflicting bookings:</p>
-                  <ul className="text-xs space-y-1 text-muted">
-                    {result.conflicts.map((conflict, idx) => (
-                      <li key={idx}>
-                        • {conflict.startTime} - {conflict.endTime}
-                      </li>
-                    ))}
-                  </ul>
+              {result.facilityOpenFrom && result.facilityOpenUntil && (
+                <div className="mt-3 text-xs text-muted">
+                  <p>Facility hours: {result.facilityOpenFrom} - {result.facilityOpenUntil}</p>
+                  <p>Requested: {result.requestedTimeSlot}</p>
                 </div>
               )}
             </div>

@@ -112,4 +112,37 @@ public class FacilityDTO {
 
         private String imageUrl;
     }
+
+    /**
+     * Request DTO for checking facility availability.
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AvailabilityRequest {
+
+        @NotNull(message = "Booking date is required")
+        private String bookingDate;
+
+        @NotNull(message = "Start time is required")
+        private String startTime;
+
+        @NotNull(message = "End time is required")
+        private String endTime;
+    }
+
+    /**
+     * Response DTO for availability check results.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AvailabilityResponse {
+        private Boolean available;
+        private String message;
+        private LocalTime facilityOpenFrom;
+        private LocalTime facilityOpenUntil;
+        private String requestedTimeSlot;
+    }
 }

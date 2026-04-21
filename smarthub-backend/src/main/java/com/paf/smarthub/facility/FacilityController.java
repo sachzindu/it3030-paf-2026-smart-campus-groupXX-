@@ -107,4 +107,16 @@ public class FacilityController {
         return ResponseEntity.ok(
                 ApiResponse.success("Facilities search results", facilities));
     }
+
+    /**
+     * Check if a facility is available during a requested time slot.
+     */
+    @PostMapping("/{id}/check-availability")
+    public ResponseEntity<ApiResponse<FacilityDTO.AvailabilityResponse>> checkAvailability(
+            @PathVariable Long id,
+            @Valid @RequestBody FacilityDTO.AvailabilityRequest request) {
+        FacilityDTO.AvailabilityResponse response = facilityService.checkAvailability(id, request);
+        return ResponseEntity.ok(
+                ApiResponse.success("Availability check completed", response));
+    }
 }
