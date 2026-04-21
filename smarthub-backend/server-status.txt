@@ -1,0 +1,6 @@
+=== SMARTHUB BACKEND SERVER STATUS ===
+Server Successfully Started!
+Port 8080: LISTENING
+Java Process (PID 8076): RUNNING
+Application startup time: 6:34:06 AM
+Health endpoint responding: YES

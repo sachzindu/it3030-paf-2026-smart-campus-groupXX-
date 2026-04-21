@@ -11,10 +11,12 @@ import com.paf.smarthub.shared.exception.DuplicateResourceException;
 import com.paf.smarthub.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,20 +33,26 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final List<String> adminEmails;
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtTokenProvider jwtTokenProvider) {
+                       JwtTokenProvider jwtTokenProvider,
+                       @Value("${app.admin.emails:}") String adminEmailsConfig) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.adminEmails = adminEmailsConfig.isEmpty()
+                ? List.of()
+                : Arrays.asList(adminEmailsConfig.split(","));
     }
 
     // ==================== Registration & Authentication ====================
 
     /**
      * Register a new user with email/password.
-     * Always assigns the USER role.
+     * Checks if email is in admin emails list; if so, assigns ADMIN role.
+     * Otherwise assigns the USER role.
      *
      * @param request the signup request containing name, email, password
      * @return AuthResponse with JWT token and user profile
@@ -54,17 +62,20 @@ public class UserService {
             throw new DuplicateResourceException("User", "email", request.getEmail());
         }
 
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+        Role assignedRole = isAdminEmail(normalizedEmail) ? Role.ADMIN : Role.USER;
+
         User user = User.builder()
                 .name(request.getName())
-                .email(request.getEmail().toLowerCase().trim())
+                .email(normalizedEmail)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
+                .role(assignedRole)
                 .authProvider(AuthProvider.LOCAL)
                 .enabled(true)
                 .build();
 
         User savedUser = userRepository.save(user);
-        log.info("New user registered: {} (role: USER)", savedUser.getEmail());
+        log.info("New user registered: {} (role: {})", savedUser.getEmail(), assignedRole);
 
         String token = jwtTokenProvider.generateToken(savedUser.getEmail(), savedUser.getRole().name());
 
@@ -265,6 +276,14 @@ public class UserService {
     private User findUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+    }
+
+    /**
+     * Check if an email is in the admin emails list.
+     */
+    private boolean isAdminEmail(String email) {
+        return adminEmails.stream()
+                .anyMatch(adminEmail -> adminEmail.trim().equalsIgnoreCase(email));
     }
 
     /**
