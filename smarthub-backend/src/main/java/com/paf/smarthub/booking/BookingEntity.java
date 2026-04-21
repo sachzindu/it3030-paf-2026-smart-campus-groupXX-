@@ -1,7 +1,7 @@
 package com.paf.smarthub.booking;
 
 import com.paf.smarthub.auth.entity.User;
-import com.paf.smarthub.facility.entity.FacilityEntity;
+import com.paf.smarthub.facility.FacilityEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
