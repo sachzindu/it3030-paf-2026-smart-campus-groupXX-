@@ -25,7 +25,7 @@ import java.util.List;
  *
  * Features:
  * - Stateless JWT-based authentication for API endpoints
- * - OAuth2 Google login with custom user service and success/failure handlers
+ * - Optional OAuth2 Google login (disabled for local development)
  * - Role-based endpoint protection via @PreAuthorize (enabled by @EnableMethodSecurity)
  * - CORS configured for the frontend origin
  * - CSRF disabled (stateless REST API)
@@ -37,23 +37,14 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
     private final String allowedOrigins;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
             JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-            CustomOAuth2UserService customOAuth2UserService,
-            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
-            OAuth2LoginFailureHandler oAuth2LoginFailureHandler,
             @Value("${app.cors.allowed-origins}") String allowedOrigins) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-        this.customOAuth2UserService = customOAuth2UserService;
-        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
-        this.oAuth2LoginFailureHandler = oAuth2LoginFailureHandler;
         this.allowedOrigins = allowedOrigins;
     }
 
@@ -93,19 +84,11 @@ public class SecurityConfig {
 
                         // Everything else is permitted (static resources, etc.)
                         .anyRequest().permitAll()
-                )
+                );
 
-                // OAuth2 login configuration
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo ->
-                                userInfo.userService(customOAuth2UserService))
-                        .successHandler(oAuth2LoginSuccessHandler)
-                        .failureHandler(oAuth2LoginFailureHandler)
-                )
-
-                // Add JWT filter before Spring's default authentication filter
-                .addFilterBefore(jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+        // Add JWT filter before Spring's default authentication filter
+        http.addFilterBefore(jwtAuthenticationFilter,
+                UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
