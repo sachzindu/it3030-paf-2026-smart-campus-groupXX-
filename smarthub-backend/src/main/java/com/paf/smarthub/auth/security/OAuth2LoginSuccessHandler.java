@@ -66,12 +66,11 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             return;
         }
 
-        // Look up the user — or create them if not yet persisted
+        
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
             // Safety net: create the user record here if CustomOAuth2UserService
-            // didn't persist it (transaction timing, schema issues, etc.)
             String name = oauth2User.getAttribute("name");
             String pictureUrl = oauth2User.getAttribute("picture");
             String googleId = oauth2User.getAttribute("sub");
@@ -103,7 +102,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             return;
         }
 
-        // Generate JWT with email and the user's actual role from the DB
+
         String token = jwtTokenProvider.generateToken(email, user.getRole().name());
 
         String targetUrl = UriComponentsBuilder
