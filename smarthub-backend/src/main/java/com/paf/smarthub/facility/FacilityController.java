@@ -2,7 +2,9 @@ package com.paf.smarthub.facility;
 
 import com.paf.smarthub.shared.dto.ApiResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -121,5 +123,38 @@ public class FacilityController {
         FacilityDTO.AvailabilityResponse response = facilityService.checkAvailability(id, request);
         return ResponseEntity.ok(
                 ApiResponse.success("Availability check completed", response));
+    }
+
+    /**
+     * Generate a QR code PNG image for a facility's detail/booking page.
+     * The QR code encodes the URL: {baseUrl}/facilities/{id}
+     *
+     * @param id      the facility ID
+     * @param baseUrl the frontend base URL (default: http://localhost:5173)
+     */
+    @GetMapping(value = "/{id}/qr-code", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getQrCode(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "http://localhost:5173") String baseUrl) {
+        byte[] qrBytes = facilityService.generateQrCode(id, baseUrl);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"facility-" + id + "-qr.png\"")
+                .contentType(MediaType.IMAGE_PNG)
+                .body(qrBytes);
+    }
+
+    // ==================== Public Endpoints (no auth) ====================
+
+    /**
+     * Public facility info — accessible without authentication.
+     * Used by QR code scans so anyone can view facility details.
+     */
+    @GetMapping("/public/{id}")
+    public ResponseEntity<ApiResponse<FacilityDTO.FacilityResponse>> getPublicFacilityById(
+            @PathVariable Long id) {
+        FacilityDTO.FacilityResponse response = facilityService.getFacilityById(id);
+        return ResponseEntity.ok(
+                ApiResponse.success("Facility retrieved successfully", response));
     }
 }

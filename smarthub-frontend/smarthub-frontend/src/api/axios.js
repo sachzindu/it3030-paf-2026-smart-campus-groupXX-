@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080';
+// Dynamically use the same hostname the browser used to load the app.
+// This ensures API calls work from localhost AND from phones on the same Wi-Fi.
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:8080`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../DashboardLayout';
-import { getFacilityById, deleteFacility } from '../../api/facilityApi';
+import { getFacilityById, deleteFacility, getFacilityQrCode } from '../../api/facilityApi';
 import AvailabilityChecker from './AvailabilityChecker';
 
 /**
@@ -18,6 +18,27 @@ export default function FacilityDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAvailabilityChecker, setShowAvailabilityChecker] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const [qrUrl, setQrUrl] = useState(null);
+  const [qrLoading, setQrLoading] = useState(false);
+
+  const handleShowQr = async () => {
+    if (qrUrl) { setShowQr(true); return; }
+    try {
+      setQrLoading(true);
+      // Use the current browser's origin so the QR code works on any device
+      // that can reach this machine (e.g. http://192.168.x.x:5173)
+      const baseUrl = window.location.origin;
+      const res = await getFacilityQrCode(id, baseUrl);
+      const objectUrl = URL.createObjectURL(res.data);
+      setQrUrl(objectUrl);
+      setShowQr(true);
+    } catch (err) {
+      console.error('Failed to load QR code', err);
+    } finally {
+      setQrLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchFacility = async () => {
@@ -240,6 +261,16 @@ export default function FacilityDetail() {
               >
                 Check Availability
               </button>
+              <button
+                onClick={handleShowQr}
+                disabled={qrLoading}
+                className="flex-1 min-w-[200px] px-6 py-3 bg-primary/10 text-primary hover:bg-primary/20 transition font-medium rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 3.5a.5.5 0 11-1 0 .5.5 0 011 0zm-12 0a.5.5 0 11-1 0 .5.5 0 011 0zm6-6a.5.5 0 11-1 0 .5.5 0 011 0z" />
+                </svg>
+                {qrLoading ? 'Generating...' : 'Show QR Code'}
+              </button>
               {isAdmin && (
                 <>
                   <button
@@ -278,6 +309,36 @@ export default function FacilityDetail() {
             facilityId={facility.id}
             onClose={() => setShowAvailabilityChecker(false)}
           />
+        )}
+
+        {/* QR Code Modal */}
+        {showQr && qrUrl && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={() => setShowQr(false)}
+          >
+            <div
+              className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 max-w-xs w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-lg font-bold text-ink">Facility QR Code</h2>
+              <p className="text-sm text-muted text-center">Scan to open this facility's detail page</p>
+              <img src={qrUrl} alt="QR Code" className="w-56 h-56" />
+              <a
+                href={qrUrl}
+                download={`facility-${id}-qr.png`}
+                className="w-full text-center px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition"
+              >
+                Download PNG
+              </a>
+              <button
+                onClick={() => setShowQr(false)}
+                className="w-full px-4 py-2 bg-surface text-ink rounded-xl text-sm font-medium hover:bg-border transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>

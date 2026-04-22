@@ -68,3 +68,14 @@ export const updateFacilityStatus = (id, status) =>
  * @param {number} id - Facility ID
  */
 export const deleteFacility = (id) => api.delete(`/api/facilities/${id}`);
+
+/**
+ * Get QR code PNG image for a facility (returns blob).
+ * @param {number} id - Facility ID
+ * @param {string} baseUrl - Frontend base URL encoded in the QR code
+ */
+export const getFacilityQrCode = (id, baseUrl = window.location.origin) =>
+  api.get(`/api/facilities/${id}/qr-code`, {
+    responseType: 'blob',
+    params: { baseUrl },
+  });

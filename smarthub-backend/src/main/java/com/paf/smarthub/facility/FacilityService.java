@@ -1,5 +1,10 @@
 package com.paf.smarthub.facility;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 import com.paf.smarthub.shared.exception.DuplicateResourceException;
 import com.paf.smarthub.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
@@ -7,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -355,5 +362,33 @@ public class FacilityService {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+
+    // ==================== QR Code ====================
+
+    /**
+     * Generate a QR code PNG image for a facility's booking/detail URL.
+     *
+     * @param id       the facility ID
+     * @param baseUrl  the frontend base URL (e.g. http://localhost:5173)
+     * @return PNG image bytes
+     */
+    @Transactional(readOnly = true)
+    public byte[] generateQrCode(Long id, String baseUrl) {
+        // Verify facility exists
+        findEntityById(id);
+
+        String facilityUrl = baseUrl + "/facility/" + id;
+
+        QRCodeWriter writer = new QRCodeWriter();
+        try {
+            BitMatrix bitMatrix = writer.encode(facilityUrl, BarcodeFormat.QR_CODE, 300, 300);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
+            return outputStream.toByteArray();
+        } catch (WriterException | IOException e) {
+            log.error("Failed to generate QR code for facility {}", id, e);
+            throw new RuntimeException("QR code generation failed for facility " + id, e);
+        }
     }
 }

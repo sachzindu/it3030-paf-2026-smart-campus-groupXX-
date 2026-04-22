@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import FacilityList from './components/Facilities/FacilityList';
 import FacilityDetail from './components/Facilities/FacilityDetail';
 import FacilityForm from './components/Facilities/FacilityForm';
+import PublicFacilityPage from './pages/PublicFacilityPage';
 
 /**
  * Root component handling all application routing.
@@ -39,6 +40,7 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
+      <Route path="/facility/:id" element={<PublicFacilityPage />} />
 
       {/* Protected Routes */}
       <Route
