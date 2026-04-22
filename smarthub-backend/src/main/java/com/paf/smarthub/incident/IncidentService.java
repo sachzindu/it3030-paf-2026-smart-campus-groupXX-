@@ -2,6 +2,8 @@ package com.paf.smarthub.incident;
 
 import com.paf.smarthub.auth.entity.User;
 import com.paf.smarthub.auth.repository.UserRepository;
+import com.paf.smarthub.facility.FacilityEntity;
+import com.paf.smarthub.facility.FacilityService;
 import com.paf.smarthub.shared.enums.Role;
 import com.paf.smarthub.shared.exception.AccessDeniedException;
 import com.paf.smarthub.shared.exception.ResourceNotFoundException;

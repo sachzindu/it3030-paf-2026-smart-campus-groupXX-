@@ -1,6 +1,7 @@
 package com.paf.smarthub.booking;
 
 import com.paf.smarthub.auth.entity.User;
+import com.paf.smarthub.facility.FacilityEntity;
 import com.paf.smarthub.shared.entity.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
