@@ -171,6 +171,69 @@ public class UserService {
     // ==================== Admin Operations ====================
 
     /**
+     * Create a new user account with a specific role (admin only).
+     * Used for adding technicians and users to the system.
+     *
+     * @param request      the admin create request containing name, email, password, role
+     * @param currentEmail the admin performing the action
+     * @return the created user DTO
+     */
+    public UserDTO adminCreateUser(AdminCreateUserRequest request, String currentEmail) {
+        if (userRepository.existsByEmail(request.getEmail().toLowerCase().trim())) {
+            throw new DuplicateResourceException("User", "email", request.getEmail());
+        }
+
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail().toLowerCase().trim())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole())
+                .authProvider(AuthProvider.LOCAL)
+                .enabled(true)
+                .build();
+
+        User savedUser = userRepository.save(user);
+        log.info("Admin created user: {} with role: {} (by {})",
+                savedUser.getEmail(), savedUser.getRole(), currentEmail);
+
+        return mapToDTO(savedUser);
+    }
+
+    /**
+     * Update a user's name and/or role (admin only).
+     * Only non-null fields in the request are applied.
+     * Prevents admins from demoting themselves.
+     *
+     * @param userId       the target user's ID
+     * @param request      the update request containing optional name and role
+     * @param currentEmail the admin performing the action
+     * @return the updated user DTO
+     */
+    public UserDTO adminUpdateUser(Long userId, AdminUpdateUserRequest request, String currentEmail) {
+        User targetUser = findUserById(userId);
+
+        // Prevent self-demotion
+        if (request.getRole() != null
+                && targetUser.getEmail().equalsIgnoreCase(currentEmail)
+                && request.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("You cannot change your own role. " +
+                    "Another admin must perform this action.");
+        }
+
+        if (request.getName() != null && !request.getName().isBlank()) {
+            targetUser.setName(request.getName());
+        }
+        if (request.getRole() != null) {
+            targetUser.setRole(request.getRole());
+        }
+
+        User savedUser = userRepository.save(targetUser);
+        log.info("Admin updated user: {} (by {})", targetUser.getEmail(), currentEmail);
+
+        return mapToDTO(savedUser);
+    }
+
+    /**
      * Update a user's role (admin only).
      * Prevents admins from demoting themselves.
      *
