@@ -481,7 +481,7 @@ export default function UserDashboard() {
                           {incident.status?.replace('_', ' ')}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-muted">
+                      <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted">
                         <span className={`font-medium ${PRIORITY_COLORS[incident.priority] || ''}`}>
                           {incident.priority}
                         </span>
@@ -489,6 +489,10 @@ export default function UserDashboard() {
                         <span>{incident.category}</span>
                         <span className="text-border">•</span>
                         <span>{formatDate(incident.createdAt)}</span>
+                        <span className="text-border">•</span>
+                        <span>
+                          {incident.assigneeName ? `Assigned: ${incident.assigneeName}` : 'Unassigned'}
+                        </span>
                       </div>
                       {incident.location && (
                         <p className="text-xs text-muted/70 mt-1 truncate flex items-center gap-1">
@@ -497,7 +501,10 @@ export default function UserDashboard() {
                         </p>
                       )}
                     </div>
-                    <ChevronRightIcon className="w-4 h-4 text-muted flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-xs font-semibold text-primary flex-shrink-0">
+                      <span className="hidden sm:inline">View</span>
+                      <ChevronRightIcon className="w-4 h-4" />
+                    </div>
                   </button>
                 ))}
             </div>

@@ -45,6 +45,7 @@ export default function IncidentDetailPage() {
   const isAdmin = user?.role === 'ADMIN';
   const isTechnician = user?.role === 'TECHNICIAN';
   const canUpdateStatus = isAdmin || isTechnician;
+  const isRegularUser = user?.role === 'USER';
   const isAdminLocked = isAdmin && incident?.adminLocked;
 
   // Status Update state
@@ -242,19 +243,43 @@ export default function IncidentDetailPage() {
 
         {/* Sidebar Actions */}
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-border/50 p-6">
-            <h2 className="text-sm font-bold text-ink mb-4 uppercase tracking-wider">Ticketing Info</h2>
-            <div className="space-y-4 text-sm">
-              <div>
-                <p className="text-muted text-xs">Assignee</p>
-                <p className="font-semibold">{incident.assigneeName || 'Unassigned'}</p>
-              </div>
-              <div>
-                <p className="text-muted text-xs">Created At</p>
-                <p className="font-semibold">{new Date(incident.createdAt).toLocaleString()}</p>
+          {isRegularUser && (
+            <div className="bg-white rounded-2xl shadow-sm border border-border/50 p-6">
+              <h2 className="text-sm font-bold text-ink mb-4 uppercase tracking-wider">Ticket Details</h2>
+              <div className="space-y-4 text-sm">
+                <div>
+                  <p className="text-muted text-xs">Assigned Technician</p>
+                  <p className="font-semibold text-ink">{incident.assigneeName || 'Not assigned yet'}</p>
+                </div>
+                <div>
+                  <p className="text-muted text-xs">Status</p>
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[incident.status] || ''}`}>
+                    {incident.status?.replace('_', ' ')}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-muted text-xs">Resolution Notes</p>
+                  <p className="text-ink text-sm whitespace-pre-wrap">
+                    {incident.resolutionNotes || 'No resolution notes yet.'}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+           <div className="bg-white rounded-2xl shadow-sm border border-border/50 p-6">
+             <h2 className="text-sm font-bold text-ink mb-4 uppercase tracking-wider">Ticketing Info</h2>
+             <div className="space-y-4 text-sm">
+               <div>
+                 <p className="text-muted text-xs">Assignee</p>
+                 <p className="font-semibold">{incident.assigneeName || 'Unassigned'}</p>
+               </div>
+               <div>
+                 <p className="text-muted text-xs">Created At</p>
+                 <p className="font-semibold">{new Date(incident.createdAt).toLocaleString()}</p>
+               </div>
+             </div>
+           </div>
 
           {/* Admin: Assign Technician */}
           {isAdmin && (
