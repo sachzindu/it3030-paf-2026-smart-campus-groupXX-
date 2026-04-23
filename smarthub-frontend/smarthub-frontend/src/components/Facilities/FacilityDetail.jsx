@@ -84,6 +84,26 @@ export default function FacilityDetail() {
     }
   };
 
+  const getHealthScoreColor = (score) => {
+    if (score >= 85) {
+      return 'text-success bg-success/10 border-success/20';
+    }
+    if (score >= 65) {
+      return 'text-warning bg-warning/10 border-warning/20';
+    }
+    return 'text-danger bg-danger/10 border-danger/20';
+  };
+
+  const getHealthLabel = (score) => {
+    if (score >= 85) {
+      return 'Excellent';
+    }
+    if (score >= 65) {
+      return 'Needs Attention';
+    }
+    return 'At Risk';
+  };
+
   const formatEnumLabel = (value) => value?.replace(/_/g, ' ') || 'N/A';
 
   if (loading) {
@@ -127,6 +147,9 @@ export default function FacilityDetail() {
       </DashboardLayout>
     );
   }
+
+  const healthScore = facility.healthScore ?? 0;
+  const improvementSuggestions = facility.improvementSuggestions || [];
 
   return (
     <DashboardLayout>
@@ -179,6 +202,9 @@ export default function FacilityDetail() {
                 <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(facility.status)}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${facility.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'}`} />
                   {formatEnumLabel(facility.status)}
+                </span>
+                <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold border ${getHealthScoreColor(healthScore)}`}>
+                  Health {healthScore}/100 · {getHealthLabel(healthScore)}
                 </span>
               </div>
             </div>
@@ -244,6 +270,47 @@ export default function FacilityDetail() {
             <div className="text-xs text-muted mb-8">
               {facility.createdAt && <p>Created: {new Date(facility.createdAt).toLocaleDateString()}</p>}
               {facility.updatedAt && <p>Updated: {new Date(facility.updatedAt).toLocaleDateString()}</p>}
+            </div>
+
+            <div className="mb-8 rounded-2xl border border-border/50 bg-surface p-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">
+                    Facility Health Score
+                  </p>
+                  <div className="flex items-end gap-3">
+                    <span className="text-4xl font-bold text-ink">{healthScore}</span>
+                    <span className="text-sm text-muted pb-1">/ 100</span>
+                  </div>
+                  <p className="text-sm text-muted mt-2">
+                    {getHealthLabel(healthScore)} based on status, profile completeness, image quality, and operating hours.
+                  </p>
+                </div>
+
+                <div className={`px-4 py-3 rounded-xl border text-sm font-semibold ${getHealthScoreColor(healthScore)}`}>
+                  {getHealthLabel(healthScore)}
+                </div>
+              </div>
+
+              {isAdmin && (
+                <div className="mt-6">
+                  <p className="text-sm font-semibold text-ink mb-3">Improvement Suggestions</p>
+                  {improvementSuggestions.length > 0 ? (
+                    <ul className="space-y-2">
+                      {improvementSuggestions.map((suggestion, index) => (
+                        <li key={index} className="flex gap-3 text-sm text-muted">
+                          <span className="mt-1 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                          <span>{suggestion}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-success">
+                      This facility profile is in strong shape. No immediate improvements are recommended.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}

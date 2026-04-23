@@ -9,6 +9,7 @@ export default function FacilityCard({ facility, onViewDetails, onEdit, onDelete
   const { user } = useAuth();
   const facilityType = facility.facilityType;
   const assetType = facility.assetType;
+  const healthScore = facility.healthScore ?? 0;
 
   // Determine status color
   const getStatusColor = (status) => {
@@ -40,6 +41,16 @@ export default function FacilityCard({ facility, onViewDetails, onEdit, onDelete
       default:
         return 'bg-muted/10 text-muted';
     }
+  };
+
+  const getHealthScoreColor = (score) => {
+    if (score >= 85) {
+      return 'bg-success/10 text-success';
+    }
+    if (score >= 65) {
+      return 'bg-warning/10 text-warning';
+    }
+    return 'bg-danger/10 text-danger';
   };
 
   return (
@@ -76,13 +87,16 @@ export default function FacilityCard({ facility, onViewDetails, onEdit, onDelete
       {/* Content Section */}
       <div className="p-5 flex flex-col flex-grow">
         {/* Badges */}
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getTypeColor(facilityType)}`}>
             {facilityType?.replace(/_/g, ' ')}
           </span>
           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(facility.status)}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${facility.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'}`} />
             {facility.status?.replace(/_/g, ' ') || 'Unknown'}
+          </span>
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getHealthScoreColor(healthScore)}`}>
+            Health {healthScore}/100
           </span>
         </div>
 
@@ -125,6 +139,12 @@ export default function FacilityCard({ facility, onViewDetails, onEdit, onDelete
             </div>
           )}
         </div>
+
+        {user?.role === 'ADMIN' && facility.improvementSuggestions?.length > 0 && (
+          <p className="text-xs text-muted mb-4">
+            Priority: {facility.improvementSuggestions[0]}
+          </p>
+        )}
 
         {/* View Details Button */}
         <button

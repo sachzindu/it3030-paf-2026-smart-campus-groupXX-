@@ -11,10 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -405,6 +407,9 @@ public class FacilityService {
      * Map a FacilityEntity to a FacilityResponse DTO.
      */
     private FacilityDTO.FacilityResponse mapToResponse(FacilityEntity entity) {
+        int healthScore = calculateHealthScore(entity);
+        List<String> improvementSuggestions = buildImprovementSuggestions(entity);
+
         return FacilityDTO.FacilityResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
@@ -417,8 +422,104 @@ public class FacilityService {
                 .availableFrom(entity.getAvailableFrom())
                 .availableTo(entity.getAvailableTo())
                 .imageUrl(entity.getImageUrl())
+                .healthScore(healthScore)
+                .improvementSuggestions(improvementSuggestions)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+
+    private int calculateHealthScore(FacilityEntity entity) {
+        int score = 100;
+
+        if (entity.getStatus() == FacilityEnums.FacilityStatus.MAINTENANCE) {
+            score -= 20;
+        } else if (entity.getStatus() == FacilityEnums.FacilityStatus.OUT_OF_SERVICE) {
+            score -= 40;
+        }
+
+        if (isBlank(entity.getDescription())) {
+            score -= 15;
+        } else if (entity.getDescription().trim().length() < 40) {
+            score -= 5;
+        }
+
+        if (isBlank(entity.getImageUrl())) {
+            score -= 10;
+        }
+
+        if (isBlank(entity.getLocation())) {
+            score -= 15;
+        }
+
+        if (entity.getCapacity() == null || entity.getCapacity() <= 0) {
+            score -= 10;
+        }
+
+        if (entity.getFacilityType() == FacilityEnums.FacilityType.EQUIPMENT && entity.getAssetType() == null) {
+            score -= 10;
+        }
+
+        if (entity.getAvailableFrom() == null || entity.getAvailableTo() == null) {
+            score -= 10;
+        } else {
+            long openHours = Duration.between(entity.getAvailableFrom(), entity.getAvailableTo()).toHours();
+            if (openHours < 4) {
+                score -= 10;
+            } else if (openHours < 8) {
+                score -= 5;
+            }
+        }
+
+        return Math.max(0, Math.min(100, score));
+    }
+
+    private List<String> buildImprovementSuggestions(FacilityEntity entity) {
+        List<String> suggestions = new ArrayList<>();
+
+        if (entity.getStatus() == FacilityEnums.FacilityStatus.MAINTENANCE) {
+            suggestions.add("Return this facility to ACTIVE status once maintenance is complete.");
+        } else if (entity.getStatus() == FacilityEnums.FacilityStatus.OUT_OF_SERVICE) {
+            suggestions.add("Resolve operational issues before making this facility available again.");
+        }
+
+        if (isBlank(entity.getDescription())) {
+            suggestions.add("Add a clear description so users understand what this facility is for.");
+        } else if (entity.getDescription().trim().length() < 40) {
+            suggestions.add("Expand the description with more useful operational details.");
+        }
+
+        if (isBlank(entity.getImageUrl())) {
+            suggestions.add("Upload a facility image to improve recognition and trust.");
+        }
+
+        if (isBlank(entity.getLocation())) {
+            suggestions.add("Add a precise location to make the facility easier to find.");
+        }
+
+        if (entity.getCapacity() == null || entity.getCapacity() <= 0) {
+            suggestions.add("Set a realistic capacity so users can judge suitability quickly.");
+        }
+
+        if (entity.getFacilityType() == FacilityEnums.FacilityType.EQUIPMENT && entity.getAssetType() == null) {
+            suggestions.add("Set an asset type for equipment so it can be categorized correctly.");
+        }
+
+        if (entity.getAvailableFrom() == null || entity.getAvailableTo() == null) {
+            suggestions.add("Configure operating hours so availability is clear to users.");
+        } else {
+            long openHours = Duration.between(entity.getAvailableFrom(), entity.getAvailableTo()).toHours();
+            if (openHours < 4) {
+                suggestions.add("Consider extending the operating window; this facility is available for less than 4 hours.");
+            } else if (openHours < 8) {
+                suggestions.add("Consider widening the operating hours to improve accessibility.");
+            }
+        }
+
+        return suggestions;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }
