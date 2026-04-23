@@ -39,6 +39,8 @@ public class IncidentDTO {
         private String resolutionNotes;
         private List<String> imageUrls;
 
+        private boolean adminLocked;
+
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
     }

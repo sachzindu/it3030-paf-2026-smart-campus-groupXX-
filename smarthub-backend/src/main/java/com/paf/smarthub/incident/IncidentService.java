@@ -138,6 +138,10 @@ public class IncidentService {
     public IncidentDTO.IncidentResponse assignTechnician(Long incidentId, IncidentDTO.AssignTechnicianRequest request) {
         IncidentEntity incident = findIncidentById(incidentId);
 
+        if (incident.isAdminLocked()) {
+            throw new AccessDeniedException("This incident is locked after the first admin update.");
+        }
+
         User technician = userRepository.findById(request.getTechnicianId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getTechnicianId()));
 
@@ -150,6 +154,7 @@ public class IncidentService {
         if (incident.getStatus() == IncidentEnums.IncidentStatus.OPEN) {
             incident.setStatus(IncidentEnums.IncidentStatus.IN_PROGRESS);
         }
+        incident.setAdminLocked(true);
 
         IncidentEntity saved = incidentRepository.save(incident);
         log.info("Incident #{} assigned to technician {}", incident.getId(), technician.getEmail());
@@ -161,6 +166,10 @@ public class IncidentService {
 
     public IncidentDTO.IncidentResponse updateStatus(Long incidentId, IncidentDTO.UpdateStatusRequest request, String userEmail, String role) {
         IncidentEntity incident = findIncidentById(incidentId);
+
+        if ("ADMIN".equalsIgnoreCase(role) && incident.isAdminLocked()) {
+            throw new AccessDeniedException("This incident is locked after the first admin update.");
+        }
 
         // Validation for status change
         if (request.getStatus() == IncidentEnums.IncidentStatus.RESOLVED && 
@@ -179,6 +188,10 @@ public class IncidentService {
             incident.setResolutionNotes(request.getResolutionNotes());
         }
 
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            incident.setAdminLocked(true);
+        }
+
         IncidentEntity saved = incidentRepository.save(incident);
         log.info("Incident #{} status updated to {} by {}", incident.getId(), saved.getStatus(), userEmail);
 
@@ -191,7 +204,13 @@ public class IncidentService {
 
     public IncidentDTO.IncidentResponse updatePriority(Long incidentId, IncidentDTO.UpdatePriorityRequest request) {
         IncidentEntity incident = findIncidentById(incidentId);
+
+        if (incident.isAdminLocked()) {
+            throw new AccessDeniedException("This incident is locked after the first admin update.");
+        }
+
         incident.setPriority(request.getPriority());
+        incident.setAdminLocked(true);
         IncidentEntity saved = incidentRepository.save(incident);
         log.info("Incident #{} priority updated to {}", incident.getId(), saved.getPriority());
 
@@ -282,6 +301,7 @@ public class IncidentService {
                 .assigneeName(e.getAssignee() != null ? e.getAssignee().getName() : null)
                 .resolutionNotes(e.getResolutionNotes())
                 .imageUrls(e.getImageUrls())
+                .adminLocked(e.isAdminLocked())
                 .createdAt(e.getCreatedAt())
                 .updatedAt(e.getUpdatedAt())
                 .build();

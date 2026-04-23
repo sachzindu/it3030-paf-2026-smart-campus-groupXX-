@@ -76,6 +76,13 @@ public class IncidentEntity extends AuditableEntity {
     private String resolutionNotes;
 
     /**
+     * When true, admin-side updates are locked after the first admin action.
+     */
+    @Column(name = "admin_locked", nullable = false)
+    @Builder.Default
+    private boolean adminLocked = false;
+
+    /**
      * List of image URLs attached to the incident (up to 3).
      */
     @ElementCollection

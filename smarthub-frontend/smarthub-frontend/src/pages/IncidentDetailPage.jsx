@@ -45,6 +45,7 @@ export default function IncidentDetailPage() {
   const isAdmin = user?.role === 'ADMIN';
   const isTechnician = user?.role === 'TECHNICIAN';
   const canUpdateStatus = isAdmin || isTechnician;
+  const isAdminLocked = isAdmin && incident?.adminLocked;
 
   // Status Update state
   const [statusUpdate, setStatusUpdate] = useState('');
@@ -260,12 +261,18 @@ export default function IncidentDetailPage() {
             <div className="bg-white rounded-2xl shadow-sm border border-border/50 p-6">
               <h2 className="text-sm font-bold text-ink mb-4 uppercase tracking-wider">Assign Technician</h2>
               <div className="space-y-4">
+                {isAdminLocked && (
+                  <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
+                    Admin updates are locked after the first admin action.
+                  </div>
+                )}
                 <div>
                   <label htmlFor="technician-select" className="block text-xs font-semibold text-ink mb-1">Select Technician</label>
                   <select
                     id="technician-select"
                     value={selectedTechnicianId}
                     onChange={e => setSelectedTechnicianId(e.target.value)}
+                    disabled={isAdminLocked}
                     className="w-full px-3 py-2 border border-border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">— Select —</option>
@@ -283,7 +290,7 @@ export default function IncidentDetailPage() {
                 )}
                 <button
                   onClick={handleAssignTechnician}
-                  disabled={assignLoading || !selectedTechnicianId}
+                  disabled={isAdminLocked || assignLoading || !selectedTechnicianId}
                   className="w-full px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-royal text-sm disabled:opacity-50 transition"
                 >
                   {assignLoading ? 'Assigning...' : 'Assign Technician'}
@@ -297,12 +304,18 @@ export default function IncidentDetailPage() {
             <div className="bg-white rounded-2xl shadow-sm border border-border/50 p-6">
               <h2 className="text-sm font-bold text-ink mb-4 uppercase tracking-wider">Edit Priority</h2>
               <div className="space-y-4">
+                {isAdminLocked && (
+                  <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
+                    Admin updates are locked after the first admin action.
+                  </div>
+                )}
                 <div>
                   <label htmlFor="priority-select" className="block text-xs font-semibold text-ink mb-1">Priority</label>
                   <select
                     id="priority-select"
                     value={selectedPriority}
                     onChange={e => setSelectedPriority(e.target.value)}
+                    disabled={isAdminLocked}
                     className="w-full px-3 py-2 border border-border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="LOW">Low</option>
@@ -313,7 +326,7 @@ export default function IncidentDetailPage() {
                 </div>
                 <button
                   onClick={handleUpdatePriority}
-                  disabled={priorityLoading || selectedPriority === incident.priority}
+                  disabled={isAdminLocked || priorityLoading || selectedPriority === incident.priority}
                   className="w-full px-4 py-2 bg-ink text-white font-semibold rounded-lg hover:bg-gray-800 text-sm disabled:opacity-50 transition"
                 >
                   {priorityLoading ? 'Updating...' : 'Update Priority'}
@@ -326,9 +339,19 @@ export default function IncidentDetailPage() {
             <div className="bg-white rounded-2xl shadow-sm border border-border/50 p-6">
               <h2 className="text-sm font-bold text-ink mb-4 uppercase tracking-wider">Manage Status</h2>
               <div className="space-y-4">
+                {isAdminLocked && (
+                  <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
+                    Admin updates are locked after the first admin action.
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-semibold text-ink mb-1">Status</label>
-                  <select value={statusUpdate} onChange={e => setStatusUpdate(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm outline-none">
+                  <select
+                    value={statusUpdate}
+                    onChange={e => setStatusUpdate(e.target.value)}
+                    disabled={isAdminLocked}
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm outline-none"
+                  >
                     <option value="OPEN">Open</option>
                     <option value="IN_PROGRESS">In Progress</option>
                     <option value="RESOLVED">Resolved</option>
@@ -338,9 +361,20 @@ export default function IncidentDetailPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-ink mb-1">Resolution / Rejection Notes</label>
-                  <textarea rows="3" value={resNotes} onChange={e => setResNotes(e.target.value)} placeholder="Required when resolving or rejecting..." className="w-full px-3 py-2 border border-border rounded-lg text-sm outline-none"></textarea>
+                  <textarea
+                    rows="3"
+                    value={resNotes}
+                    onChange={e => setResNotes(e.target.value)}
+                    disabled={isAdminLocked}
+                    placeholder="Required when resolving or rejecting..."
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm outline-none"
+                  ></textarea>
                 </div>
-                <button onClick={handleStatusUpdate} className="w-full px-4 py-2 bg-ink text-white font-semibold rounded-lg hover:bg-gray-800 text-sm">
+                <button
+                  onClick={handleStatusUpdate}
+                  disabled={isAdminLocked}
+                  className="w-full px-4 py-2 bg-ink text-white font-semibold rounded-lg hover:bg-gray-800 text-sm disabled:opacity-50"
+                >
                   Update Ticket
                 </button>
               </div>
