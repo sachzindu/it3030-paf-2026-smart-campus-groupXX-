@@ -4,10 +4,22 @@ import com.paf.smarthub.shared.exception.DuplicateResourceException;
 import com.paf.smarthub.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.stream.Collectors;
 
 /**
@@ -19,11 +31,21 @@ import java.util.stream.Collectors;
 public class FacilityService {
 
     private static final Logger log = LoggerFactory.getLogger(FacilityService.class);
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            MediaType.IMAGE_JPEG_VALUE,
+            MediaType.IMAGE_PNG_VALUE,
+            "image/jpg",
+            MediaType.IMAGE_GIF_VALUE,
+            "image/webp");
 
     private final FacilityRepository facilityRepository;
+    private final String fileUploadDir;
 
-    public FacilityService(FacilityRepository facilityRepository) {
+    public FacilityService(
+            FacilityRepository facilityRepository,
+            @Value("${file.upload-dir}") String fileUploadDir) {
         this.facilityRepository = facilityRepository;
+        this.fileUploadDir = fileUploadDir;
     }
 
     // ==================== Create ====================
@@ -279,6 +301,42 @@ public class FacilityService {
                 .build();
     }
 
+    /**
+     * Upload a facility image and return its public URL.
+     */
+    public FacilityDTO.ImageUploadResponse uploadFacilityImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Please select an image file to upload.");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
+            throw new IllegalArgumentException(
+                    "Only JPG, PNG, GIF, and WEBP images are allowed.");
+        }
+
+        String originalFileName = file.getOriginalFilename();
+        String extension = getFileExtension(originalFileName);
+        String generatedFileName = UUID.randomUUID() + extension;
+
+        Path uploadPath = Paths.get(fileUploadDir, "facilities").toAbsolutePath().normalize();
+        Path targetPath = uploadPath.resolve(generatedFileName);
+
+        try {
+            Files.createDirectories(uploadPath);
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            log.error("Failed to store facility image {}", originalFileName, ex);
+            throw new RuntimeException("Failed to upload facility image.", ex);
+        }
+
+        String imageUrl = "/uploads/facilities/" + generatedFileName;
+        return FacilityDTO.ImageUploadResponse.builder()
+                .imageUrl(imageUrl)
+                .fileName(generatedFileName)
+                .build();
+    }
+
     // ==================== Helper Methods ====================
 
     /**
@@ -334,6 +392,13 @@ public class FacilityService {
         if (request.getImageUrl() != null) {
             entity.setImageUrl(request.getImageUrl());
         }
+    }
+
+    private String getFileExtension(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            return ".png";
+        }
+        return fileName.substring(fileName.lastIndexOf('.'));
     }
 
     /**

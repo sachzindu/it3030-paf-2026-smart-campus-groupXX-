@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../DashboardLayout';
-import { getFacilityById, createFacility, updateFacility } from '../../api/facilityApi';
+import {
+  getFacilityById,
+  createFacility,
+  updateFacility,
+  uploadFacilityImage,
+  getResponseData,
+  resolveFacilityImageUrl,
+} from '../../api/facilityApi';
 
 /**
  * FacilityForm Component
@@ -26,6 +33,8 @@ export default function FacilityForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
 
   // Fetch facility data if editing
   useEffect(() => {
@@ -43,6 +52,7 @@ export default function FacilityForm() {
             status: facility.status || 'ACTIVE',
             imageUrl: facility.imageUrl || '',
           });
+          setImagePreviewUrl(resolveFacilityImageUrl(facility.imageUrl || ''));
         } catch (err) {
           console.error('Error fetching facility:', err);
           setError('Failed to load facility data');
@@ -54,12 +64,34 @@ export default function FacilityForm() {
     }
   }, [id, isEditMode]);
 
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: name === 'capacity' ? parseInt(value) || '' : value,
     }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (imagePreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+
+    setSelectedImageFile(file);
+    setImagePreviewUrl(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
@@ -74,12 +106,17 @@ export default function FacilityForm() {
         capacity: parseInt(formData.capacity),
       };
 
-      let response;
+      if (selectedImageFile) {
+        const uploadResponse = await uploadFacilityImage(selectedImageFile);
+        const uploadData = getResponseData(uploadResponse);
+        payload.imageUrl = uploadData.imageUrl;
+      }
+
       if (isEditMode) {
-        response = await updateFacility(id, payload);
+        await updateFacility(id, payload);
         setSuccessMessage('Facility updated successfully!');
       } else {
-        response = await createFacility(payload);
+        await createFacility(payload);
         setSuccessMessage('Facility created successfully!');
       }
 
@@ -204,7 +241,7 @@ export default function FacilityForm() {
               </div>
             </div>
 
-            {/* Capacity and Image URL Row */}
+            {/* Capacity and Image Upload Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Capacity */}
               <div>
@@ -223,21 +260,42 @@ export default function FacilityForm() {
                 />
               </div>
 
-              {/* Image URL */}
+              {/* Image Upload */}
               <div>
                 <label className="block text-sm font-semibold text-ink mb-2">
-                  Image URL
+                  Facility Image
                 </label>
                 <input
-                  type="url"
-                  name="imageUrl"
-                  value={formData.imageUrl}
-                  onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                  placeholder="https://example.com/image.jpg"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                  onChange={handleImageChange}
+                  className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-medium"
                 />
+                <p className="text-xs text-muted mt-2">
+                  Upload JPG, PNG, GIF, or WEBP up to 5MB.
+                </p>
               </div>
             </div>
+
+            {(imagePreviewUrl || formData.imageUrl) && (
+              <div>
+                <label className="block text-sm font-semibold text-ink mb-2">
+                  Image Preview
+                </label>
+                <div className="rounded-2xl border border-border/50 overflow-hidden bg-mist max-w-sm">
+                  <img
+                    src={imagePreviewUrl || resolveFacilityImageUrl(formData.imageUrl)}
+                    alt="Facility preview"
+                    className="w-full h-48 object-cover"
+                  />
+                </div>
+                {selectedImageFile ? (
+                  <p className="text-xs text-muted mt-2">Selected file: {selectedImageFile.name}</p>
+                ) : formData.imageUrl ? (
+                  <p className="text-xs text-muted mt-2">Current image will be kept unless you choose a new file.</p>
+                ) : null}
+              </div>
+            )}
 
             {/* Status */}
             <div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../DashboardLayout';
-import { getFacilityById, deleteFacility } from '../../api/facilityApi';
+import { getFacilityById, deleteFacility, resolveFacilityImageUrl } from '../../api/facilityApi';
 import AvailabilityChecker from './AvailabilityChecker';
 
 /**
@@ -75,12 +75,16 @@ export default function FacilityDetail() {
         return 'bg-violet/10 text-violet';
       case 'MEETING_ROOM':
         return 'bg-success/10 text-success';
+      case 'AUDITORIUM':
+        return 'bg-royal/10 text-royal';
       case 'EQUIPMENT':
         return 'bg-warning/10 text-warning';
       default:
         return 'bg-muted/10 text-muted';
     }
   };
+
+  const formatEnumLabel = (value) => value?.replace(/_/g, ' ') || 'N/A';
 
   if (loading) {
     return (
@@ -144,7 +148,7 @@ export default function FacilityDetail() {
           {facility.imageUrl && (
             <div className="h-96 overflow-hidden bg-mist">
               <img
-                src={facility.imageUrl}
+                src={resolveFacilityImageUrl(facility.imageUrl)}
                 alt={facility.name}
                 className="w-full h-full object-cover"
               />
@@ -169,12 +173,12 @@ export default function FacilityDetail() {
             <div className="mb-6">
               <h1 className="text-4xl font-bold text-ink mb-4">{facility.name}</h1>
               <div className="flex gap-3 flex-wrap">
-                <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${getTypeColor(facility.type)}`}>
-                  {facility.type?.replace(/_/g, ' ')}
+                <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${getTypeColor(facility.facilityType)}`}>
+                  {formatEnumLabel(facility.facilityType)}
                 </span>
                 <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(facility.status)}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${facility.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'}`} />
-                  {facility.status === 'ACTIVE' ? 'Active' : facility.status}
+                  {formatEnumLabel(facility.status)}
                 </span>
               </div>
             </div>
@@ -199,29 +203,39 @@ export default function FacilityDetail() {
                       <p className="text-lg font-semibold text-ink">{facility.location}</p>
                     </div>
                   )}
-                  {facility.type && (
+                  {facility.facilityType && (
                     <div>
                       <p className="text-muted text-sm">Type</p>
-                      <p className="text-lg font-semibold text-ink">{facility.type}</p>
+                      <p className="text-lg font-semibold text-ink">{formatEnumLabel(facility.facilityType)}</p>
+                    </div>
+                  )}
+                  {facility.assetType && (
+                    <div>
+                      <p className="text-muted text-sm">Asset Type</p>
+                      <p className="text-lg font-semibold text-ink">{formatEnumLabel(facility.assetType)}</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Amenities */}
+              {/* Availability */}
               <div>
-                <h2 className="text-lg font-bold text-ink mb-4">Amenities</h2>
-                {facility.amenities && facility.amenities.length > 0 ? (
-                  <ul className="grid grid-cols-2 gap-3">
-                    {facility.amenities.map((amenity, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <span className="text-success">✓</span>
-                        <span className="text-ink">{amenity}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <h2 className="text-lg font-bold text-ink mb-4">Availability</h2>
+                {facility.availableFrom && facility.availableTo ? (
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-muted text-sm">Operating Hours</p>
+                      <p className="text-lg font-semibold text-ink">
+                        {facility.availableFrom} - {facility.availableTo}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted text-sm">Current Status</p>
+                      <p className="text-lg font-semibold text-ink">{formatEnumLabel(facility.status)}</p>
+                    </div>
+                  </div>
                 ) : (
-                  <p className="text-muted text-sm">No amenities listed</p>
+                  <p className="text-muted text-sm">No facility hours configured</p>
                 )}
               </div>
             </div>

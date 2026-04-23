@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../DashboardLayout';
-import { getAllFacilities, searchFacilities, deleteFacility } from '../../api/facilityApi';
+import {
+  getAllFacilities,
+  searchFacilities,
+  deleteFacility,
+  getResponseData,
+} from '../../api/facilityApi';
 import FacilityCard from './FacilityCard';
 import FacilityFilter from './FacilityFilter';
 
@@ -19,9 +24,6 @@ export default function FacilityList() {
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(0);
   const [filters, setFilters] = useState({
     type: '',
     status: '',
@@ -34,12 +36,9 @@ export default function FacilityList() {
       setLoading(true);
       setError(null);
 
-      const response = await getAllFacilities(currentPage, pageSize, filters.type, filters.status);
-      
-      // API returns a simple list, not paginated response
-      const facilitiesList = response.data.data || response.data || [];
+      const response = await getAllFacilities(filters.type, filters.status);
+      const facilitiesList = getResponseData(response) || [];
       setFacilities(Array.isArray(facilitiesList) ? facilitiesList : []);
-      setTotalPages(1);
     } catch (err) {
       console.error('Error fetching facilities:', err);
       setError(err.response?.data?.message || 'Failed to load facilities');
@@ -52,12 +51,11 @@ export default function FacilityList() {
   // Fetch facilities when filters or pagination changes
   useEffect(() => {
     fetchFacilities();
-  }, [currentPage, pageSize, filters]);
+  }, [filters.type, filters.status]);
 
   // Handle filter changes
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    setCurrentPage(0); // Reset to first page when filters change
   };
 
   // Handle search
@@ -72,12 +70,17 @@ export default function FacilityList() {
       setError(null);
 
       const response = await searchFacilities({
-        name: searchTerm,
+        keyword: searchTerm,
+        type: filters.type || undefined,
+        status: filters.status || undefined,
       });
 
-      setFacilities(response.data || []);
-      setTotalPages(1);
-      setCurrentPage(0);
+      const facilitiesList = getResponseData(response) || [];
+      setFacilities(Array.isArray(facilitiesList) ? facilitiesList : []);
+      setFilters((prev) => ({
+        ...prev,
+        search: searchTerm,
+      }));
     } catch (err) {
       console.error('Error searching facilities:', err);
       setError('Search failed. Please try again.');
@@ -185,44 +188,17 @@ export default function FacilityList() {
 
         {/* Facilities Grid */}
         {!loading && facilities.length > 0 && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {facilities.map((facility) => (
-                <FacilityCard
-                  key={facility.id}
-                  facility={facility}
-                  onViewDetails={() => handleViewDetails(facility.id)}
-                  onEdit={() => handleEditFacility(facility.id)}
-                  onDelete={() => handleDeleteFacility(facility.id)}
-                />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-between items-center py-4 border-t border-border">
-                <div className="text-sm text-muted">
-                  Page {currentPage + 1} of {totalPages} • Showing {facilities.length} facilities
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                    disabled={currentPage === 0}
-                    className="px-4 py-2 border border-border rounded-lg text-ink hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                    disabled={currentPage === totalPages - 1}
-                    className="px-4 py-2 border border-border rounded-lg text-ink hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {facilities.map((facility) => (
+              <FacilityCard
+                key={facility.id}
+                facility={facility}
+                onViewDetails={() => handleViewDetails(facility.id)}
+                onEdit={() => handleEditFacility(facility.id)}
+                onDelete={() => handleDeleteFacility(facility.id)}
+              />
+            ))}
+          </div>
         )}
       </div>
     </DashboardLayout>

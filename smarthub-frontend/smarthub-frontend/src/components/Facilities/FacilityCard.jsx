@@ -1,4 +1,5 @@
 import { useAuth } from '../../context/AuthContext';
+import { resolveFacilityImageUrl } from '../../api/facilityApi';
 
 /**
  * FacilityCard Component
@@ -6,6 +7,9 @@ import { useAuth } from '../../context/AuthContext';
  */
 export default function FacilityCard({ facility, onViewDetails, onEdit, onDelete }) {
   const { user } = useAuth();
+  const facilityType = facility.facilityType;
+  const assetType = facility.assetType;
+
   // Determine status color
   const getStatusColor = (status) => {
     switch (status) {
@@ -29,6 +33,8 @@ export default function FacilityCard({ facility, onViewDetails, onEdit, onDelete
         return 'bg-violet/10 text-violet';
       case 'MEETING_ROOM':
         return 'bg-success/10 text-success';
+      case 'AUDITORIUM':
+        return 'bg-royal/10 text-royal';
       case 'EQUIPMENT':
         return 'bg-warning/10 text-warning';
       default:
@@ -43,7 +49,7 @@ export default function FacilityCard({ facility, onViewDetails, onEdit, onDelete
       {facility.imageUrl && (
         <div className="h-40 overflow-hidden bg-mist">
           <img
-            src={facility.imageUrl}
+            src={resolveFacilityImageUrl(facility.imageUrl)}
             alt={facility.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -71,12 +77,12 @@ export default function FacilityCard({ facility, onViewDetails, onEdit, onDelete
       <div className="p-5 flex flex-col flex-grow">
         {/* Badges */}
         <div className="flex items-center gap-2 mb-3">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getTypeColor(facility.type)}`}>
-            {facility.type?.replace(/_/g, ' ')}
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getTypeColor(facilityType)}`}>
+            {facilityType?.replace(/_/g, ' ')}
           </span>
           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(facility.status)}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${facility.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'}`} />
-            {facility.status === 'ACTIVE' ? 'Active' : facility.status}
+            {facility.status?.replace(/_/g, ' ') || 'Unknown'}
           </span>
         </div>
 
@@ -110,12 +116,12 @@ export default function FacilityCard({ facility, onViewDetails, onEdit, onDelete
               <span>{facility.capacity} capacity</span>
             </div>
           )}
-          {facility.amenities && facility.amenities.length > 0 && (
+          {assetType && (
             <div className="flex items-center gap-1">
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5 2a1 1 0 011-1h8a1 1 0 011 1v14a1 1 0 11-2 0V4H7v12a1 1 0 11-2 0V2z" clipRule="evenodd" />
               </svg>
-              <span>{facility.amenities.length} amenities</span>
+              <span>{assetType.replace(/_/g, ' ')}</span>
             </div>
           )}
         </div>

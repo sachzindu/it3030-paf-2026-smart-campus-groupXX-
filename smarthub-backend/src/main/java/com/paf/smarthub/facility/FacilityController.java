@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -44,6 +45,18 @@ public class FacilityController {
         FacilityDTO.FacilityResponse response = facilityService.createFacility(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Facility created successfully", response));
+    }
+
+    /**
+     * Upload a facility image (ADMIN only).
+     */
+    @PostMapping("/upload-image")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<FacilityDTO.ImageUploadResponse>> uploadFacilityImage(
+            @RequestParam("file") MultipartFile file) {
+        FacilityDTO.ImageUploadResponse response = facilityService.uploadFacilityImage(file);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Facility image uploaded successfully", response));
     }
 
     /**

@@ -145,4 +145,16 @@ public class FacilityDTO {
         private LocalTime facilityOpenUntil;
         private String requestedTimeSlot;
     }
+
+    /**
+     * Response DTO for facility image uploads.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ImageUploadResponse {
+        private String imageUrl;
+        private String fileName;
+    }
 }

@@ -1,19 +1,32 @@
 import api from './axios';
+import { API_BASE_URL } from './axios';
 
 /**
  * API layer for Facilities & Assets Catalogue.
  * All functions return the Axios response promise.
  */
 
+export const getResponseData = (response) => response.data?.data ?? response.data;
+
+export const resolveFacilityImageUrl = (imageUrl) => {
+  if (!imageUrl) {
+    return '';
+  }
+
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('blob:')) {
+    return imageUrl;
+  }
+
+  return `${API_BASE_URL}${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+};
+
 /**
- * Get all facilities with pagination and filtering.
- * @param {number} page - Page number (0-indexed)
- * @param {number} size - Page size
+ * Get all facilities with optional filtering.
  * @param {string} type - Facility type filter (optional)
  * @param {string} status - Facility status filter (optional)
  */
-export const getAllFacilities = (page = 0, size = 12, type = '', status = '') => {
-  const params = { page, size };
+export const getAllFacilities = (type = '', status = '') => {
+  const params = {};
   if (type) params.type = type;
   if (status) params.status = status;
   return api.get('/api/facilities', { params });
@@ -26,11 +39,20 @@ export const getAllFacilities = (page = 0, size = 12, type = '', status = '') =>
 export const getFacilityById = (id) => api.get(`/api/facilities/${id}`);
 
 /**
- * Search/filter facilities with advanced search criteria.
- * @param {Object} searchRequest - { name, type, minCapacity, maxCapacity, location, status, availabilityDate, availabilityStartTime, availabilityEndTime }
+ * Search/filter facilities using the backend's query-parameter contract.
+ * @param {Object} searchParams - { keyword, type, status, minCapacity, location }
  */
-export const searchFacilities = (searchRequest) =>
-  api.post('/api/facilities/search', searchRequest);
+export const searchFacilities = (searchParams = {}) => {
+  const params = {};
+
+  if (searchParams.keyword) params.keyword = searchParams.keyword;
+  if (searchParams.type) params.type = searchParams.type;
+  if (searchParams.status) params.status = searchParams.status;
+  if (searchParams.minCapacity) params.minCapacity = searchParams.minCapacity;
+  if (searchParams.location) params.location = searchParams.location;
+
+  return api.get('/api/facilities/search', { params });
+};
 
 /**
  * Check facility availability for a specific time slot.
@@ -56,12 +78,19 @@ export const updateFacility = (id, updateRequest) =>
   api.put(`/api/facilities/${id}`, updateRequest);
 
 /**
- * Update facility status (ADMIN only).
- * @param {number} id - Facility ID
- * @param {string} status - New status (ACTIVE, OUT_OF_SERVICE, MAINTENANCE)
+ * Upload a facility image file and get the stored URL.
+ * @param {File} file - Image file from the local computer
  */
-export const updateFacilityStatus = (id, status) =>
-  api.patch(`/api/facilities/${id}/status`, { status });
+export const uploadFacilityImage = (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return api.post('/api/facilities/upload-image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
 
 /**
  * Delete a facility (ADMIN only).

@@ -68,6 +68,7 @@ export default function FacilityFilter({ filters, onFilterChange, onSearch }) {
             <option value="LECTURE_HALL">Lecture Hall</option>
             <option value="LAB">Lab</option>
             <option value="MEETING_ROOM">Meeting Room</option>
+            <option value="AUDITORIUM">Auditorium</option>
             <option value="EQUIPMENT">Equipment</option>
           </select>
         </div>
