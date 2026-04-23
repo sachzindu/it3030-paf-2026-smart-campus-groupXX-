@@ -28,17 +28,56 @@ export default function FacilityList() {
     type: '',
     status: '',
     search: '',
+    minHealth: '',
+    sortBy: 'health-desc',
   });
 
-  // Fetch facilities with current filters and pagination
+  const applyHealthPresentation = (facilitiesList, activeFilters) => {
+    const minHealth = activeFilters.minHealth ? Number(activeFilters.minHealth) : null;
+
+    let nextFacilities = Array.isArray(facilitiesList) ? [...facilitiesList] : [];
+
+    if (minHealth !== null && !Number.isNaN(minHealth)) {
+      nextFacilities = nextFacilities.filter(
+        (facility) => (facility.healthScore ?? 0) >= minHealth
+      );
+    }
+
+    switch (activeFilters.sortBy) {
+      case 'health-asc':
+        nextFacilities.sort((left, right) => (left.healthScore ?? 0) - (right.healthScore ?? 0));
+        break;
+      case 'name-asc':
+        nextFacilities.sort((left, right) => left.name.localeCompare(right.name));
+        break;
+      case 'name-desc':
+        nextFacilities.sort((left, right) => right.name.localeCompare(left.name));
+        break;
+      case 'health-desc':
+      default:
+        nextFacilities.sort((left, right) => (right.healthScore ?? 0) - (left.healthScore ?? 0));
+        break;
+    }
+
+    return nextFacilities;
+  };
+
+  // Fetch facilities with current backend-supported filters, then apply local health filtering/sorting
   const fetchFacilities = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getAllFacilities(filters.type, filters.status);
+      const response = filters.search.trim()
+        ? await searchFacilities({
+            keyword: filters.search,
+            type: filters.type || undefined,
+            status: filters.status || undefined,
+          })
+        : await getAllFacilities(filters.type, filters.status);
+
       const facilitiesList = getResponseData(response) || [];
-      setFacilities(Array.isArray(facilitiesList) ? facilitiesList : []);
+      setFacilities(applyHealthPresentation(facilitiesList, filters));
     } catch (err) {
       console.error('Error fetching facilities:', err);
       setError(err.response?.data?.message || 'Failed to load facilities');
@@ -51,7 +90,7 @@ export default function FacilityList() {
   // Fetch facilities when filters or pagination changes
   useEffect(() => {
     fetchFacilities();
-  }, [filters.type, filters.status]);
+  }, [filters.type, filters.status, filters.search, filters.minHealth, filters.sortBy]);
 
   // Handle filter changes
   const handleFilterChange = (newFilters) => {
@@ -59,34 +98,11 @@ export default function FacilityList() {
   };
 
   // Handle search
-  const handleSearch = async (searchTerm) => {
-    if (!searchTerm.trim()) {
-      handleFilterChange(filters);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await searchFacilities({
-        keyword: searchTerm,
-        type: filters.type || undefined,
-        status: filters.status || undefined,
-      });
-
-      const facilitiesList = getResponseData(response) || [];
-      setFacilities(Array.isArray(facilitiesList) ? facilitiesList : []);
-      setFilters((prev) => ({
-        ...prev,
-        search: searchTerm,
-      }));
-    } catch (err) {
-      console.error('Error searching facilities:', err);
-      setError('Search failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const handleSearch = (searchTerm) => {
+    setFilters((prev) => ({
+      ...prev,
+      search: searchTerm,
+    }));
   };
 
   // Navigate to facility detail

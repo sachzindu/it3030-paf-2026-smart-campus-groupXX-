@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 /**
  * Data transfer objects for the Facility module.
@@ -38,6 +39,8 @@ public class FacilityDTO {
         private LocalTime availableFrom;
         private LocalTime availableTo;
         private String imageUrl;
+        private Integer healthScore;
+        private List<String> improvementSuggestions;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
     }
