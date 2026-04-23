@@ -713,12 +713,6 @@ export default function AdminDashboard() {
             bgColor="bg-violet/5" borderColor="border-violet/10"
             onClick={() => navigate('/incidents')}
           />
-          <QuickLinkCard
-            title="Report Incident"
-            icon={<AlertIcon className="w-5 h-5 text-warning" />}
-            bgColor="bg-warning/5" borderColor="border-warning/10"
-            onClick={() => navigate('/incidents/new')}
-          />
         </div>
       </div>
 
