@@ -4,6 +4,7 @@ import com.paf.smarthub.auth.entity.User;
 import com.paf.smarthub.auth.repository.UserRepository;
 import com.paf.smarthub.facility.FacilityEntity;
 import com.paf.smarthub.facility.FacilityService;
+import com.paf.smarthub.notification.NotificationService;
 import com.paf.smarthub.shared.enums.Role;
 import com.paf.smarthub.shared.exception.AccessDeniedException;
 import com.paf.smarthub.shared.exception.ResourceNotFoundException;
@@ -29,17 +30,20 @@ public class IncidentService {
     private final UserRepository userRepository;
     private final FacilityService facilityService;
     private final FileStorageService fileStorageService;
+    private final NotificationService notificationService;
 
     public IncidentService(IncidentRepository incidentRepository,
                            IncidentCommentRepository commentRepository,
                            UserRepository userRepository,
                            FacilityService facilityService,
-                           FileStorageService fileStorageService) {
+                           FileStorageService fileStorageService,
+                           NotificationService notificationService) {
         this.incidentRepository = incidentRepository;
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
         this.facilityService = facilityService;
         this.fileStorageService = fileStorageService;
+        this.notificationService = notificationService;
     }
 
     // ============================================
@@ -149,6 +153,8 @@ public class IncidentService {
 
         IncidentEntity saved = incidentRepository.save(incident);
         log.info("Incident #{} assigned to technician {}", incident.getId(), technician.getEmail());
+
+        notificationService.sendIncidentAssignedEmail(saved);
         
         return mapToIncidentResponse(saved);
     }
@@ -176,6 +182,10 @@ public class IncidentService {
         IncidentEntity saved = incidentRepository.save(incident);
         log.info("Incident #{} status updated to {} by {}", incident.getId(), saved.getStatus(), userEmail);
 
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            notificationService.sendIncidentStatusEmail(saved);
+        }
+
         return mapToIncidentResponse(saved);
     }
 
@@ -184,6 +194,8 @@ public class IncidentService {
         incident.setPriority(request.getPriority());
         IncidentEntity saved = incidentRepository.save(incident);
         log.info("Incident #{} priority updated to {}", incident.getId(), saved.getPriority());
+
+        notificationService.sendIncidentPriorityEmail(saved);
         return mapToIncidentResponse(saved);
     }
 
@@ -219,6 +231,10 @@ public class IncidentService {
                 .build();
 
         IncidentCommentEntity saved = commentRepository.save(comment);
+
+        if (author.getRole() == Role.ADMIN) {
+            notificationService.sendIncidentAdminCommentEmail(incident, saved.getContent());
+        }
         return mapToCommentResponse(saved);
     }
 
