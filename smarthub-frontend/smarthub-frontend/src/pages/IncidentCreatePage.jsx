@@ -8,6 +8,8 @@ export default function IncidentCreatePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   
   const [facilities, setFacilities] = useState([]);
   
@@ -36,7 +38,45 @@ export default function IncidentCreatePage() {
     fetchFac();
   }, []);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const validateField = (name, value) => {
+    const trimmed = typeof value === 'string' ? value.trim() : value;
+
+    if (['title', 'description', 'location'].includes(name)) {
+      if (!trimmed) return 'This field is required.';
+    }
+
+    if (name === 'title' && trimmed && trimmed.length < 5) {
+      return 'Title should be at least 5 characters.';
+    }
+
+    if (name === 'description' && trimmed && trimmed.length < 10) {
+      return 'Description should be at least 10 characters.';
+    }
+
+    return '';
+  };
+
+  const validateForm = (data) => {
+    const nextErrors = {};
+    ['title', 'description', 'location'].forEach((field) => {
+      const message = validateField(field, data[field]);
+      if (message) nextErrors[field] = message;
+    });
+    return nextErrors;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const nextForm = { ...form, [name]: value };
+    setForm(nextForm);
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+  };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -61,6 +101,11 @@ export default function IncidentCreatePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const nextErrors = validateForm(form);
+    setErrors(nextErrors);
+    setTouched({ title: true, description: true, location: true });
+    if (Object.keys(nextErrors).length > 0) return;
+
     setLoading(true);
     setError('');
 
@@ -99,12 +144,36 @@ export default function IncidentCreatePage() {
           
           <div>
             <label className="block text-sm font-semibold text-ink mb-1">Title</label>
-            <input required type="text" name="title" value={form.title} onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. Projector not turning on" />
+            <input
+              required
+              type="text"
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none ${errors.title && touched.title ? 'border-danger' : 'border-border'}`}
+              placeholder="e.g. Projector not turning on"
+            />
+            {errors.title && touched.title && (
+              <p className="text-xs text-danger mt-1">{errors.title}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-ink mb-1">Description</label>
-            <textarea required name="description" value={form.description} onChange={handleChange} rows="4" className="w-full px-4 py-2 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Provide detailed information about the issue..."></textarea>
+            <textarea
+              required
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              rows="4"
+              className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none ${errors.description && touched.description ? 'border-danger' : 'border-border'}`}
+              placeholder="Provide detailed information about the issue..."
+            ></textarea>
+            {errors.description && touched.description && (
+              <p className="text-xs text-danger mt-1">{errors.description}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -141,7 +210,19 @@ export default function IncidentCreatePage() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-ink mb-1">Specific Location</label>
-              <input required type="text" name="location" value={form.location} onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-xl outline-none" placeholder="e.g. Room 301, near door" />
+              <input
+                required
+                type="text"
+                name="location"
+                value={form.location}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`w-full px-4 py-2 border rounded-xl outline-none ${errors.location && touched.location ? 'border-danger' : 'border-border'}`}
+                placeholder="e.g. Room 301, near door"
+              />
+              {errors.location && touched.location && (
+                <p className="text-xs text-danger mt-1">{errors.location}</p>
+              )}
             </div>
           </div>
 
@@ -178,7 +259,11 @@ export default function IncidentCreatePage() {
 
           <div className="pt-4 flex justify-end gap-3">
             <button type="button" onClick={() => navigate(-1)} className="px-5 py-2.5 text-sm font-semibold text-muted bg-surface rounded-xl hover:bg-mist">Cancel</button>
-            <button type="submit" disabled={loading} className="px-5 py-2.5 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-royal disabled:opacity-50">
+            <button
+              type="submit"
+              disabled={loading || Object.values(errors).some(Boolean)}
+              className="px-5 py-2.5 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-royal disabled:opacity-50"
+            >
               {loading ? 'Submitting...' : 'Submit Incident'}
             </button>
           </div>
