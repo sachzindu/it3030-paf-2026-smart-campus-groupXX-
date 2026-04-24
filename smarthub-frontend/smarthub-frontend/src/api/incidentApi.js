@@ -41,3 +41,21 @@ export const deleteComment = (commentId) => api.delete(`/api/incidents/comments/
 
 /** Fetch users by role — used to populate the technician assignment dropdown */
 export const getUsersByRole = (role) => api.get(`/api/auth/users/role/${role}`);
+
+export const incidentApi = {
+  createIncident,
+  getMyIncidents,
+  getAllIncidents,
+  getAssignedIncidents,
+  getIncidentById,
+  assignTechnician,
+  updateStatus,
+  updateIncident,
+  deleteIncident,
+  updatePriority,
+  getComments,
+  addComment,
+  deleteComment,
+  getUsersByRole,
+};
+

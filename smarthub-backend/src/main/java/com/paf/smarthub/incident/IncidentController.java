@@ -141,7 +141,7 @@ public class IncidentController {
     private String extractRole(Authentication authentication) {
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(a -> a.startsWith("ROLE_"))
+                .filter(a -> a != null && a.startsWith("ROLE_"))
                 .map(a -> a.substring(5))
                 .findFirst()
                 .orElse("USER");
