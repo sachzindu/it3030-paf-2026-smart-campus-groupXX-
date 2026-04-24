@@ -117,7 +117,7 @@ export default function AdminBookingsPage() {
     return acc;
   }, {});
 
- return (
+  return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -206,7 +206,7 @@ export default function AdminBookingsPage() {
           </div>
         )}
 
- {/* Bookings Table */}
+        {/* Bookings Table */}
         {!loading && bookings.length > 0 && (
           <div className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
@@ -386,4 +386,3 @@ export default function AdminBookingsPage() {
     </DashboardLayout>
   );
 }
-        

@@ -13,6 +13,9 @@ const ROLE_CONFIG = {
     dotColor: 'bg-violet',
     navItems: [
       { label: 'Dashboard', icon: DashboardIcon, path: '/dashboard/admin' },
+      { label: 'Facilities', icon: FacilityIcon, path: '/facilities' },
+      { label: 'Bookings', icon: BookingIcon, path: '/bookings' },
+      { label: 'Tickets', icon: TicketIcon, path: '/incidents' },
     ],
   },
   TECHNICIAN: {
@@ -21,6 +24,7 @@ const ROLE_CONFIG = {
     dotColor: 'bg-cyan',
     navItems: [
       { label: 'Dashboard', icon: DashboardIcon, path: '/dashboard/technician' },
+      { label: 'Tickets', icon: TicketIcon, path: '/incidents' },
     ],
   },
   USER: {
@@ -29,6 +33,9 @@ const ROLE_CONFIG = {
     dotColor: 'bg-primary',
     navItems: [
       { label: 'Dashboard', icon: DashboardIcon, path: '/dashboard/user' },
+      { label: 'Facilities', icon: FacilityIcon, path: '/facilities' },
+      { label: 'My Bookings', icon: BookingIcon, path: '/bookings/my' },
+      { label: 'Tickets', icon: TicketIcon, path: '/incidents' },
     ],
   },
 };
@@ -66,7 +73,9 @@ export default function DashboardLayout({ children }) {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
           {config.navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = item.path.startsWith('/dashboard')
+              ? location.pathname === item.path
+              : location.pathname.startsWith(item.path);
             return (
               <button
                 key={item.path}
@@ -149,3 +158,28 @@ function DashboardIcon({ className }) {
     </svg>
   );
 }
+
+function FacilityIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    </svg>
+  );
+}
+
+function BookingIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  );
+}
+
+function TicketIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+    </svg>
+  );
+}
+

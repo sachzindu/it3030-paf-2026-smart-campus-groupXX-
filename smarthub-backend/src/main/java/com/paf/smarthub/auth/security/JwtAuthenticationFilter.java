@@ -1,5 +1,4 @@
 package com.paf.smarthub.auth.security;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,14 +12,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 
-/**
- * Filter that validates JWT tokens on every request.
- * Extracts the token from the Authorization header, validates it,
- * loads the user, and sets the SecurityContext.
- */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
