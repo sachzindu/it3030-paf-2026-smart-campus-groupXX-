@@ -223,4 +223,73 @@ export default function BookingCreatePage() {
                 )}
               </div>
 
-             
+              {/* Time Range */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-muted mb-1.5 uppercase tracking-wider">
+                    Start Time <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    id="field-startTime"
+                    name="startTime"
+                    type="time"
+                    value={form.startTime}
+                    onChange={handleChange}
+                    className={`w-full px-3.5 py-2.5 border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all ${
+                      fieldErrors.startTime ? 'border-danger' : 'border-border'
+                    }`}
+                  />
+                  {fieldErrors.startTime && (
+                    <p className="mt-1 text-xs text-danger font-medium">
+                      {fieldErrors.startTime}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-muted mb-1.5 uppercase tracking-wider">
+                    End Time <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    id="field-endTime"
+                    name="endTime"
+                    type="time"
+                    value={form.endTime}
+                    onChange={handleChange}
+                    className={`w-full px-3.5 py-2.5 border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all ${
+                      fieldErrors.endTime ? 'border-danger' : 'border-border'
+                    }`}
+                  />
+                  {fieldErrors.endTime && (
+                    <p className="mt-1 text-xs text-danger font-medium">
+                      {fieldErrors.endTime}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Purpose */}
+              <div>
+                <label className="block text-xs font-semibold text-muted mb-1.5 uppercase tracking-wider">
+                  Purpose <span className="text-danger">*</span>
+                </label>
+                <textarea
+                  id="field-purpose"
+                  name="purpose"
+                  value={form.purpose}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="Describe the purpose of your booking..."
+                  className={`w-full px-3.5 py-2.5 border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none ${
+                    fieldErrors.purpose ? 'border-danger' : 'border-border'
+                  }`}
+                />
+                {fieldErrors.purpose && (
+                  <p className="mt-1 text-xs text-danger font-medium">
+                    {fieldErrors.purpose}
+                  </p>
+                )}
+              </div>
+
+              {/* Expected Attendees */}
+              <div>
+              
