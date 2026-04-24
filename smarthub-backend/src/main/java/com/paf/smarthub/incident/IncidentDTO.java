@@ -75,8 +75,7 @@ public class IncidentDTO {
         @NotNull(message = "Category is required")
         private IncidentEnums.IncidentCategory category;
 
-        @NotNull(message = "Priority is required")
-        private IncidentEnums.IncidentPriority priority;
+
 
         private Long facilityId;
 

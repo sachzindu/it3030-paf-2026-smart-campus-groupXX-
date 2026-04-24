@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import api from './axios';
 
 /**
@@ -58,4 +59,7 @@ export const incidentApi = {
   deleteComment,
   getUsersByRole,
 };
+
+void updateIncident;
+void deleteIncident;
 
