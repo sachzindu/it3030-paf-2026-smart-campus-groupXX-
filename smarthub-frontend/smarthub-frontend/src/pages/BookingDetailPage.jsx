@@ -94,4 +94,250 @@ export default function BookingDetailPage() {
     (booking?.status === 'PENDING' || booking?.status === 'APPROVED');
   const canReview = isAdmin && booking?.status === 'PENDING';
 
- 
+ if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center py-20">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error && !booking) {
+    return (
+      <DashboardLayout>
+        <div className="bg-danger/10 border border-danger/20 text-danger px-6 py-4 rounded-xl text-sm font-medium">
+          {error}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="max-w-3xl space-y-6 animate-fade-in">
+        {/* Back */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-ink transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+
+        {error && (
+          <div className="bg-danger/10 border border-danger/20 text-danger px-4 py-3 rounded-xl text-sm font-medium">
+            {error}
+          </div>
+        )}
+
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+          <div className="h-3 bg-gradient-to-r from-primary to-royal" />
+
+          <div className="p-8">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                      STATUS_COLORS[booking.status]
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${STATUS_DOT[booking.status]}`} />
+                    {booking.status}
+                  </span>
+                  <span className="text-xs text-muted">
+                    Booking #{booking.id}
+                  </span>
+                </div>
+                <h1 className="text-2xl font-bold text-ink">
+                  {booking.facilityName}
+                </h1>
+                <p className="text-muted text-sm mt-1">
+                  {booking.facilityLocation} • {booking.facilityType?.replace('_', ' ')}
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                {canReview && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setReviewAction('APPROVED');
+                        setAdminRemarks('');
+                        setReviewError('');
+                        setShowReviewModal(true);
+                      }}
+                      className="px-4 py-2.5 text-sm font-semibold text-success bg-success/10 rounded-xl hover:bg-success/20 transition-colors"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => {
+                        setReviewAction('REJECTED');
+                        setAdminRemarks('');
+                        setReviewError('');
+                        setShowReviewModal(true);
+                      }}
+                      className="px-4 py-2.5 text-sm font-semibold text-danger bg-danger/10 rounded-xl hover:bg-danger/20 transition-colors"
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+                {canCancel && (
+                  <button
+                    onClick={handleCancel}
+                    disabled={actionLoading}
+                    className="px-4 py-2.5 text-sm font-semibold text-danger bg-danger/10 rounded-xl hover:bg-danger/20 transition-colors disabled:opacity-50"
+                  >
+                    {actionLoading ? 'Cancelling...' : 'Cancel Booking'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <InfoCard
+                icon={<CalendarIcon />}
+                label="Date"
+                value={booking.bookingDate}
+              />
+              <InfoCard
+                icon={<ClockIcon />}
+                label="Time"
+                value={`${booking.startTime?.substring(0, 5)} – ${booking.endTime?.substring(0, 5)}`}
+              />
+              <InfoCard
+                icon={<UserIcon />}
+                label="Requested By"
+                value={`${booking.userName} (${booking.userEmail})`}
+              />
+              {booking.expectedAttendees && (
+                <InfoCard
+                  icon={<UsersIcon />}
+                  label="Expected Attendees"
+                  value={booking.expectedAttendees}
+                />
+              )}
+            </div>
+
+            {/* Purpose */}
+            <div className="mb-6">
+              <h2 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+                Purpose
+              </h2>
+              <div className="bg-surface rounded-xl p-4">
+                <p className="text-sm text-ink leading-relaxed">
+                  {booking.purpose}
+                </p>
+              </div>
+            </div>
+
+            {/* Review Info */}
+            {booking.reviewedByName && (
+              <div className="border-t border-border/50 pt-6">
+                <h2 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">
+                  Review Details
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InfoCard
+                    icon={<ShieldIcon />}
+                    label="Reviewed By"
+                    value={booking.reviewedByName}
+                  />
+                  {booking.reviewedAt && (
+                    <InfoCard
+                      icon={<ClockIcon />}
+                      label="Reviewed At"
+                      value={new Date(booking.reviewedAt).toLocaleString()}
+                    />
+                  )}
+                </div>
+                {booking.adminRemarks && (
+                  <div className="mt-4 bg-surface rounded-xl p-4">
+                    <p className="text-xs font-semibold text-muted uppercase mb-1">
+                      Admin Remarks
+                    </p>
+                    <p className="text-sm text-ink italic">
+                      {booking.adminRemarks}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Review Modal */}
+        {showReviewModal && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
+              <h3 className="text-lg font-bold text-ink mb-4">
+                {reviewAction === 'APPROVED' ? 'Approve' : 'Reject'} Booking
+              </h3>
+
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
+                  Remarks
+                  {reviewAction === 'REJECTED' && (
+                    <span className="text-danger"> *</span>
+                  )}
+                </label>
+                <textarea
+                  value={adminRemarks}
+                  onChange={(e) => setAdminRemarks(e.target.value)}
+                  rows={3}
+                  placeholder={
+                    reviewAction === 'REJECTED'
+                      ? 'Reason for rejection (required)...'
+                      : 'Optional remarks...'
+                  }
+                  className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+                />
+              </div>
+
+              {reviewError && (
+                <div className="bg-danger/10 border border-danger/20 text-danger px-3 py-2 rounded-lg text-xs font-medium mb-4">
+                  {reviewError}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowReviewModal(false)}
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-muted bg-surface border border-border rounded-xl hover:bg-mist transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleReview}
+                  disabled={actionLoading}
+                  className={`flex-1 px-4 py-2.5 text-sm font-semibold text-white rounded-xl transition-all disabled:opacity-50 ${
+                    reviewAction === 'APPROVED'
+                      ? 'bg-success hover:bg-emerald-600'
+                      : 'bg-danger hover:bg-red-600'
+                  }`}
+                >
+                  {actionLoading
+                    ? 'Processing...'
+                    : reviewAction === 'APPROVED'
+                    ? 'Approve'
+                    : 'Reject'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
+
