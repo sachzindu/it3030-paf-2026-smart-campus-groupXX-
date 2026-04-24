@@ -5,6 +5,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { getMyIncidents, getAllIncidents, getAssignedIncidents } from '../api/incidentApi';
 
 const STATUS_COLORS = {
+  PENDING: 'bg-warning/10 text-warning',
   OPEN: 'bg-primary/10 text-primary',
   IN_PROGRESS: 'bg-warning/10 text-warning',
   RESOLVED: 'bg-success/10 text-success',

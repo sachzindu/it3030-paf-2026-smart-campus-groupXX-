@@ -10,10 +10,12 @@ import {
   getComments,
   addComment,
   deleteComment,
+  deleteIncident,
   getUsersByRole,
 } from '../api/incidentApi';
 
 const STATUS_COLORS = {
+  PENDING: 'bg-warning/10 text-warning',
   OPEN: 'bg-primary/10 text-primary',
   IN_PROGRESS: 'bg-warning/10 text-warning',
   RESOLVED: 'bg-success/10 text-success',
@@ -47,6 +49,8 @@ export default function IncidentDetailPage() {
   const canUpdateStatus = isAdmin || isTechnician;
   const isRegularUser = user?.role === 'USER';
   const isAdminLocked = isAdmin && incident?.adminLocked;
+  const isOwner = incident && user?.email && incident.reporterEmail?.toLowerCase() === user.email.toLowerCase();
+  const canEditOwnIncident = isRegularUser && isOwner && incident?.status === 'PENDING';
 
   // Status Update state
   const [statusUpdate, setStatusUpdate] = useState('');
@@ -170,6 +174,20 @@ export default function IncidentDetailPage() {
     }
   }
 
+  const handleEditIncident = () => {
+    navigate(`/incidents/${id}/edit`);
+  };
+
+  const handleDeleteIncident = async () => {
+    if (!window.confirm('Delete this pending incident? This action cannot be undone.')) return;
+    try {
+      await deleteIncident(id);
+      navigate('/incidents', { replace: true });
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to delete incident');
+    }
+  };
+
   if (loading) return <DashboardLayout><div className="p-10 flex justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div></DashboardLayout>;
   if (error) return <DashboardLayout><div className="bg-danger/10 text-danger p-4 rounded-xl">{error}</div></DashboardLayout>;
 
@@ -206,6 +224,23 @@ export default function IncidentDetailPage() {
                     </a>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {canEditOwnIncident && (
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  onClick={handleEditIncident}
+                  className="px-4 py-2.5 text-sm font-semibold text-primary bg-primary/10 rounded-xl hover:bg-primary/20 transition-colors"
+                >
+                  Edit Incident
+                </button>
+                <button
+                  onClick={handleDeleteIncident}
+                  className="px-4 py-2.5 text-sm font-semibold text-danger bg-danger/10 rounded-xl hover:bg-danger/20 transition-colors"
+                >
+                  Delete Incident
+                </button>
               </div>
             )}
           </div>
@@ -257,6 +292,11 @@ export default function IncidentDetailPage() {
                     {incident.status?.replace('_', ' ')}
                   </span>
                 </div>
+                {canEditOwnIncident && (
+                  <div className="text-xs text-muted bg-warning/5 border border-warning/20 rounded-lg px-3 py-2">
+                    You can edit or delete this ticket while it remains pending.
+                  </div>
+                )}
                 <div>
                   <p className="text-muted text-xs">Resolution Notes</p>
                   <p className="text-ink text-sm whitespace-pre-wrap">

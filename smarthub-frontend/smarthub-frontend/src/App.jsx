@@ -24,6 +24,7 @@ import BookingDetailPage from './pages/BookingDetailPage';
 import IncidentsPage from './pages/IncidentsPage';
 import IncidentCreatePage from './pages/IncidentCreatePage';
 import IncidentDetailPage from './pages/IncidentDetailPage';
+import IncidentEditPage from './pages/IncidentEditPage';
 
 /**
  * Root component handling all application routing.
@@ -188,6 +189,15 @@ function AppRoutes() {
                 element={
                     <ProtectedRoute allowedRoles={['ADMIN', 'USER', 'TECHNICIAN']}>
                         <IncidentDetailPage />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/incidents/:id/edit"
+                element={
+                    <ProtectedRoute allowedRoles={['USER']}>
+                        <IncidentEditPage />
                     </ProtectedRoute>
                 }
             />
