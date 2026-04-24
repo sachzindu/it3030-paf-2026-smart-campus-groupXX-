@@ -292,4 +292,52 @@ export default function BookingCreatePage() {
 
               {/* Expected Attendees */}
               <div>
-              
+  <label className="block text-xs font-semibold text-muted mb-1.5 uppercase tracking-wider">
+                  Expected Attendees
+                </label>
+                <input
+                  id="field-expectedAttendees"
+                  name="expectedAttendees"
+                  type="number"
+                  min="1"
+                  value={form.expectedAttendees}
+                  onChange={handleChange}
+                  placeholder="Number of people expected"
+                  className={`w-full px-3.5 py-2.5 border rounded-xl text-sm text-ink bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all ${
+                    fieldErrors.expectedAttendees
+                      ? 'border-danger'
+                      : 'border-border'
+                  }`}
+                />
+                {fieldErrors.expectedAttendees && (
+                  <p className="mt-1 text-xs text-danger font-medium">
+                    {fieldErrors.expectedAttendees}
+                  </p>
+                )}
+              </div>
+
+              {/* Submit */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-muted bg-surface border border-border rounded-xl hover:bg-mist transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary to-royal rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl transition-all disabled:opacity-50"
+                >
+                  {submitting ? 'Submitting...' : 'Submit Booking Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+                 
