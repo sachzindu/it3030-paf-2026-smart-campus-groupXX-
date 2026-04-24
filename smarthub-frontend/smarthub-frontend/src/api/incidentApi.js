@@ -22,6 +22,15 @@ export const assignTechnician = (id, data) => api.put(`/api/incidents/${id}/assi
 
 export const updateStatus = (id, data) => api.put(`/api/incidents/${id}/status`, data);
 
+export const updateIncident = (id, formData) =>
+  api.put(`/api/incidents/${id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+export const deleteIncident = (id) => api.delete(`/api/incidents/${id}`);
+
 export const updatePriority = (id, data) => api.put(`/api/incidents/${id}/priority`, data);
 
 export const getComments = (id) => api.get(`/api/incidents/${id}/comments`);

@@ -18,10 +18,11 @@ public class IncidentEnums {
     }
 
     /**
-     * OPEN -> IN_PROGRESS -> RESOLVED -> CLOSED
+     * PENDING -> OPEN -> IN_PROGRESS -> RESOLVED -> CLOSED
      * Admin/Technician can reject.
      */
     public enum IncidentStatus {
+        PENDING,
         OPEN,
         IN_PROGRESS,
         RESOLVED,

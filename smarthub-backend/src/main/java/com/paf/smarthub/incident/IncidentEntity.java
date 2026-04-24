@@ -43,7 +43,7 @@ public class IncidentEntity extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
-    private IncidentEnums.IncidentStatus status = IncidentEnums.IncidentStatus.OPEN;
+    private IncidentEnums.IncidentStatus status = IncidentEnums.IncidentStatus.PENDING;
 
     /**
      * Can be a specific Facility ID or a manual text location.

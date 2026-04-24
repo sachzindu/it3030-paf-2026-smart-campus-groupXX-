@@ -62,6 +62,23 @@ public class IncidentController {
         return ResponseEntity.ok(ApiResponse.success("Incident retrieved", response));
     }
 
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<IncidentDTO.IncidentResponse>> updateIncident(
+            @PathVariable Long id,
+            @Valid @ModelAttribute IncidentDTO.UpdateIncidentRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            Authentication auth) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Incident updated successfully",
+                incidentService.updateIncident(id, request, images, auth.getName())));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteIncident(@PathVariable Long id, Authentication auth) {
+        incidentService.deleteIncident(id, auth.getName());
+        return ResponseEntity.ok(ApiResponse.success("Incident deleted successfully"));
+    }
+
 
     // ============================================
     // TICKETS - UPDATE

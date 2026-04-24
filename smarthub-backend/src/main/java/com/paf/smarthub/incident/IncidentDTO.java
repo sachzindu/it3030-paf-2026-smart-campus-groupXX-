@@ -89,6 +89,30 @@ public class IncidentDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class UpdateIncidentRequest {
+        @NotBlank(message = "Title is required")
+        private String title;
+
+        @NotBlank(message = "Description is required")
+        private String description;
+
+        @NotNull(message = "Category is required")
+        private IncidentEnums.IncidentCategory category;
+
+        @NotNull(message = "Priority is required")
+        private IncidentEnums.IncidentPriority priority;
+
+        private Long facilityId;
+
+        @NotBlank(message = "Location is required")
+        private String location;
+
+        private String contactDetails;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class UpdateStatusRequest {
         @NotNull(message = "Status is required")
         private IncidentEnums.IncidentStatus status;

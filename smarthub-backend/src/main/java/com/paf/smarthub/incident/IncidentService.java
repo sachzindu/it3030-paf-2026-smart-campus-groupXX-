@@ -83,6 +83,7 @@ public class IncidentService {
                 .description(request.getDescription())
                 .category(request.getCategory())
                 .priority(request.getPriority())
+                .status(IncidentEnums.IncidentStatus.PENDING)
                 .facility(facility)
                 .location(request.getLocation())
                 .contactDetails(request.getContactDetails())
@@ -93,6 +94,61 @@ public class IncidentService {
         IncidentEntity saved = incidentRepository.save(entity);
         log.info("Incident created: #{} by {}", saved.getId(), userEmail);
         return mapToIncidentResponse(saved);
+    }
+
+    public IncidentDTO.IncidentResponse updateIncident(
+            Long incidentId,
+            IncidentDTO.UpdateIncidentRequest request,
+            List<MultipartFile> images,
+            String userEmail) {
+
+        IncidentEntity incident = findIncidentById(incidentId);
+        ensureOwnerAndPending(incident, userEmail);
+
+        FacilityEntity facility = null;
+        if (request.getFacilityId() != null) {
+            facility = facilityService.findEntityById(request.getFacilityId());
+        }
+
+        incident.setTitle(request.getTitle().trim());
+        incident.setDescription(request.getDescription().trim());
+        incident.setCategory(request.getCategory());
+        incident.setPriority(request.getPriority());
+        incident.setFacility(facility);
+        incident.setLocation(request.getLocation().trim());
+        incident.setContactDetails(request.getContactDetails());
+
+        if (images != null && !images.isEmpty()) {
+            if (images.size() > 3) {
+                throw new IllegalArgumentException("Maximum 3 image attachments allowed.");
+            }
+
+            List<String> imageUrls = new ArrayList<>();
+            for (MultipartFile file : images) {
+                if (!file.isEmpty()) {
+                    String url = fileStorageService.storeFile(file);
+                    if (url != null) {
+                        imageUrls.add(url);
+                    }
+                }
+            }
+            if (!imageUrls.isEmpty()) {
+                incident.setImageUrls(imageUrls);
+            }
+        }
+
+        IncidentEntity saved = incidentRepository.save(incident);
+        log.info("Incident updated: #{} by {}", saved.getId(), userEmail);
+        return mapToIncidentResponse(saved);
+    }
+
+    public void deleteIncident(Long incidentId, String userEmail) {
+        IncidentEntity incident = findIncidentById(incidentId);
+        ensureOwnerAndPending(incident, userEmail);
+
+        commentRepository.deleteByIncidentId(incidentId);
+        incidentRepository.delete(incident);
+        log.info("Incident deleted: #{} by {}", incidentId, userEmail);
     }
 
     @Transactional(readOnly = true)
@@ -280,6 +336,16 @@ public class IncidentService {
     private IncidentEntity findIncidentById(Long id) {
         return incidentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Incident", "id", id));
+    }
+
+    private void ensureOwnerAndPending(IncidentEntity incident, String userEmail) {
+        if (!incident.getReporter().getEmail().equalsIgnoreCase(userEmail)) {
+            throw new AccessDeniedException("You can only modify your own incident tickets.");
+        }
+
+        if (incident.getStatus() != IncidentEnums.IncidentStatus.PENDING) {
+            throw new AccessDeniedException("Only PENDING incidents can be edited or deleted.");
+        }
     }
 
     private IncidentDTO.IncidentResponse mapToIncidentResponse(IncidentEntity e) {

@@ -9,4 +9,6 @@ import java.util.List;
 public interface IncidentCommentRepository extends JpaRepository<IncidentCommentEntity, Long> {
 
     List<IncidentCommentEntity> findByIncidentIdOrderByCreatedAtAsc(Long incidentId);
+
+    void deleteByIncidentId(Long incidentId);
 }
