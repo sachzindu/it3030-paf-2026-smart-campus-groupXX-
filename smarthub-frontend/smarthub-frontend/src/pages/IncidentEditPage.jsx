@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
+import { API_BASE_URL } from '../api/axios';
 import { getIncidentById, updateIncident } from '../api/incidentApi';
 import { getAllFacilities } from '../api/facilityApi';
 
@@ -28,8 +29,6 @@ const PRIORITY_OPTIONS = [
   { value: 'HIGH', label: 'High' },
   { value: 'CRITICAL', label: 'Critical' },
 ];
-
-const BASE_URL = 'http://localhost:8080';
 
 export default function IncidentEditPage() {
   const { id } = useParams();
@@ -188,9 +187,9 @@ export default function IncidentEditPage() {
                 <p className="text-sm font-semibold text-ink mb-2">Current Images</p>
                 <div className="flex flex-wrap gap-3">
                   {incident.imageUrls.map((url, idx) => (
-                    <a key={idx} href={`${BASE_URL}${url}`} target="_blank" rel="noreferrer">
+                    <a key={idx} href={`${API_BASE_URL}${url}`} target="_blank" rel="noreferrer">
                       <img
-                        src={`${BASE_URL}${url}`}
+                        src={`${API_BASE_URL}${url}`}
                         alt="incident evidence"
                         className="w-24 h-24 object-cover rounded-xl border border-border shadow-sm"
                       />

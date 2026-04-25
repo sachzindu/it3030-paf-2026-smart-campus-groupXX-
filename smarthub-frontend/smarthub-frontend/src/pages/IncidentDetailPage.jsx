@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../api/axios';
 import {
   getIncidentById,
   updateStatus,
@@ -30,8 +31,6 @@ const PRIORITY_COLORS = {
   CRITICAL: 'text-danger',
 };
 
-const BASE_URL = 'http://localhost:8080'; // Typically read from env
-
 export default function IncidentDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -59,11 +58,10 @@ export default function IncidentDetailPage() {
   // ---- Admin: Assign Technician state ----
   const [technicians, setTechnicians] = useState([]);
   const [selectedTechnicianId, setSelectedTechnicianId] = useState('');
-  const [assignLoading, setAssignLoading] = useState(false);
 
   // ---- Admin: Edit Priority state ----
   const [selectedPriority, setSelectedPriority] = useState('');
-  const [priorityLoading, setPriorityLoading] = useState(false);
+  const [adminUpdateLoading, setAdminUpdateLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -89,7 +87,7 @@ export default function IncidentDetailPage() {
 
       const comRes = await getComments(id);
       setComments(comRes.data.data);
-    } catch (err) {
+    } catch {
       setError('Failed to load incident details');
     } finally {
       setLoading(false);
@@ -121,34 +119,40 @@ export default function IncidentDetailPage() {
     }
   };
 
-  const handleAssignTechnician = async () => {
-    if (!selectedTechnicianId) {
-      alert('Please select a technician to assign.');
+  const handleUpdateTicket = async () => {
+    if (isAdmin) {
+      const currentAssigneeId = incident?.assigneeId ? String(incident.assigneeId) : '';
+      const hasAssigneeChange = Boolean(selectedTechnicianId) && selectedTechnicianId !== currentAssigneeId;
+      const hasPriorityChange = Boolean(selectedPriority) && selectedPriority !== incident.priority;
+      const hasStatusChange =
+        statusUpdate !== incident.status ||
+        (resNotes || '') !== (incident.resolutionNotes || '');
+
+      if (!hasAssigneeChange && !hasPriorityChange && !hasStatusChange) return;
+
+      try {
+        setAdminUpdateLoading(true);
+
+        if (hasAssigneeChange) {
+          await assignTechnician(id, { technicianId: Number(selectedTechnicianId) });
+        }
+        if (hasPriorityChange) {
+          await updatePriority(id, { priority: selectedPriority });
+        }
+        if (hasStatusChange) {
+          await updateStatus(id, { status: statusUpdate, resolutionNotes: resNotes });
+        }
+
+        await fetchData();
+      } catch (e) {
+        alert(e.response?.data?.message || 'Error updating ticket');
+      } finally {
+        setAdminUpdateLoading(false);
+      }
       return;
     }
-    try {
-      setAssignLoading(true);
-      await assignTechnician(id, { technicianId: Number(selectedTechnicianId) });
-      await fetchData();
-    } catch (e) {
-      alert(e.response?.data?.message || 'Error assigning technician');
-    } finally {
-      setAssignLoading(false);
-    }
-  };
 
-  const handleUpdatePriority = async () => {
-    if (!selectedPriority) return;
-    if (selectedPriority === incident.priority) return; // No change
-    try {
-      setPriorityLoading(true);
-      await updatePriority(id, { priority: selectedPriority });
-      await fetchData();
-    } catch (e) {
-      alert(e.response?.data?.message || 'Error updating priority');
-    } finally {
-      setPriorityLoading(false);
-    }
+    await handleStatusUpdate();
   };
 
   const handleAddComment = async (e) => {
@@ -159,7 +163,7 @@ export default function IncidentDetailPage() {
       setNewComment('');
       const comRes = await getComments(id);
       setComments(comRes.data.data);
-    } catch (e) {
+    } catch {
       alert('Failed to add comment');
     }
   };
@@ -169,7 +173,7 @@ export default function IncidentDetailPage() {
     try {
       await deleteComment(commentId);
       setComments(comments.filter(c => c.id !== commentId));
-    } catch (e) {
+    } catch {
       alert('Failed to delete comment');
     }
   }
@@ -219,8 +223,8 @@ export default function IncidentDetailPage() {
                 <h3 className="text-sm font-bold text-ink mb-3">Evidence Images</h3>
                 <div className="flex gap-4">
                   {incident.imageUrls.map((url, idx) => (
-                    <a key={idx} href={`${BASE_URL}${url}`} target="_blank" rel="noreferrer">
-                      <img src={`${BASE_URL}${url}`} alt="evidence" className="w-32 h-32 object-cover rounded-xl border border-border shadow-sm hover:opacity-80 transition cursor-zoom-in" />
+                    <a key={idx} href={`${API_BASE_URL}${url}`} target="_blank" rel="noreferrer">
+                      <img src={`${API_BASE_URL}${url}`} alt="evidence" className="w-32 h-32 object-cover rounded-xl border border-border shadow-sm hover:opacity-80 transition cursor-zoom-in" />
                     </a>
                   ))}
                 </div>
@@ -353,13 +357,7 @@ export default function IncidentDetailPage() {
                     Currently assigned to: <span className="font-semibold text-ink">{incident.assigneeName}</span>
                   </p>
                 )}
-                <button
-                  onClick={handleAssignTechnician}
-                  disabled={isAdminLocked || assignLoading || !selectedTechnicianId}
-                  className="w-full px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-royal text-sm disabled:opacity-50 transition"
-                >
-                  {assignLoading ? 'Assigning...' : 'Assign Technician'}
-                </button>
+                <p className="text-xs text-muted">Saved when you click Update Ticket.</p>
               </div>
             </div>
           )}
@@ -389,20 +387,14 @@ export default function IncidentDetailPage() {
                     <option value="CRITICAL">Critical</option>
                   </select>
                 </div>
-                <button
-                  onClick={handleUpdatePriority}
-                  disabled={isAdminLocked || priorityLoading || selectedPriority === incident.priority}
-                  className="w-full px-4 py-2 bg-ink text-white font-semibold rounded-lg hover:bg-gray-800 text-sm disabled:opacity-50 transition"
-                >
-                  {priorityLoading ? 'Updating...' : 'Update Priority'}
-                </button>
+                <p className="text-xs text-muted">Saved when you click Update Ticket.</p>
               </div>
             </div>
           )}
 
           {canUpdateStatus && (
             <div className="bg-white rounded-2xl shadow-sm border border-border/50 p-6">
-              <h2 className="text-sm font-bold text-ink mb-4 uppercase tracking-wider">Manage Status</h2>
+              <h2 className="text-sm font-bold text-ink mb-4 uppercase tracking-wider">Update Ticket</h2>
               <div className="space-y-4">
                 {isAdminLocked && (
                   <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
@@ -417,6 +409,7 @@ export default function IncidentDetailPage() {
                     disabled={isAdminLocked}
                     className="w-full px-3 py-2 border border-border rounded-lg text-sm outline-none"
                   >
+                    <option value="PENDING">Pending</option>
                     <option value="OPEN">Open</option>
                     <option value="IN_PROGRESS">In Progress</option>
                     <option value="RESOLVED">Resolved</option>
@@ -436,11 +429,11 @@ export default function IncidentDetailPage() {
                   ></textarea>
                 </div>
                 <button
-                  onClick={handleStatusUpdate}
-                  disabled={isAdminLocked}
+                  onClick={handleUpdateTicket}
+                  disabled={isAdminLocked || adminUpdateLoading}
                   className="w-full px-4 py-2 bg-ink text-white font-semibold rounded-lg hover:bg-gray-800 text-sm disabled:opacity-50"
                 >
-                  Update Ticket
+                  {adminUpdateLoading ? 'Updating...' : 'Update Ticket'}
                 </button>
               </div>
             </div>
