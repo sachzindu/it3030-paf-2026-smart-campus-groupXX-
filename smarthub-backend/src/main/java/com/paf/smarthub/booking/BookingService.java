@@ -260,3 +260,136 @@ public class BookingService {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Get a booking by ID.
+     * Users can only see their own bookings; admins can see any.
+     *
+     * @param bookingId the booking ID
+     * @param userEmail the requesting user's email
+     * @param userRole  the requesting user's role
+     * @return the booking response
+     */
+    @Transactional(readOnly = true)
+    public BookingDTO.BookingResponse getBookingById(
+            Long bookingId, String userEmail, String userRole) {
+
+        BookingEntity booking = findBookingById(bookingId);
+
+        // Non-admin users can only view their own bookings
+        if (!"ADMIN".equals(userRole)
+                && !booking.getUser().getEmail().equalsIgnoreCase(userEmail)) {
+            throw new AccessDeniedException("You can only view your own bookings.");
+        }
+
+        return mapToResponse(booking);
+    }
+
+    // ==================== Validation Helpers ====================
+
+    /**
+     * Validate the booking date/time is not in the past.
+     */
+    private void validateNotInPast(LocalDate date, LocalTime startTime) {
+        LocalDate today = LocalDate.now();
+        if (date.isBefore(today)) {
+            throw new IllegalArgumentException("Booking date cannot be in the past.");
+        }
+        if (date.isEqual(today) && startTime.isBefore(LocalTime.now())) {
+            throw new IllegalArgumentException(
+                    "For same-day bookings, the start time must be in the future.");
+        }
+    }
+
+    /**
+     * Validate booking times fall within the facility's availability window.
+     */
+    private void validateAvailabilityWindow(
+            FacilityEntity facility, LocalTime startTime, LocalTime endTime) {
+
+        if (facility.getAvailableFrom() != null && facility.getAvailableTo() != null) {
+            if (startTime.isBefore(facility.getAvailableFrom())) {
+                throw new IllegalArgumentException(
+                        "Booking start time " + startTime + " is before the facility's "
+                                + "availability window (" + facility.getAvailableFrom() + ").");
+            }
+            if (endTime.isAfter(facility.getAvailableTo())) {
+                throw new IllegalArgumentException(
+                        "Booking end time " + endTime + " is after the facility's "
+                                + "availability window (" + facility.getAvailableTo() + ").");
+            }
+        }
+    }
+
+    /**
+     * Validate expected attendees don't exceed facility capacity.
+     */
+    private void validateCapacity(FacilityEntity facility, Integer expectedAttendees) {
+        if (facility.getCapacity() != null && expectedAttendees != null
+                && expectedAttendees > facility.getCapacity()) {
+            throw new IllegalArgumentException(
+                    "Expected attendees (" + expectedAttendees + ") exceeds the facility's "
+                            + "capacity (" + facility.getCapacity() + ").");
+        }
+    }
+
+    /**
+     * Check for scheduling conflicts with existing PENDING or APPROVED bookings.
+     *
+     * @param facilityId       the facility to check
+     * @param bookingDate      the booking date
+     * @param startTime        the requested start time
+     * @param endTime          the requested end time
+     * @param excludeBookingId optional booking ID to exclude (for re-check on approval)
+     */
+    private void checkForConflicts(Long facilityId, LocalDate bookingDate,
+                                   LocalTime startTime, LocalTime endTime,
+                                   Long excludeBookingId) {
+        List<BookingEntity> conflicts = bookingRepository.findConflictingBookings(
+                facilityId, bookingDate, startTime, endTime, excludeBookingId);
+
+        if (!conflicts.isEmpty()) {
+            BookingEntity conflict = conflicts.get(0);
+            throw new BookingConflictException(
+                    "Scheduling conflict: this facility is already booked on " + bookingDate
+                            + " from " + conflict.getStartTime() + " to " + conflict.getEndTime()
+                            + " (booking #" + conflict.getId() + ", status: "
+                            + conflict.getStatus() + ").");
+        }
+    }
+
+    // ==================== Internal Helpers ====================
+
+    private BookingEntity findBookingById(Long id) {
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", id));
+    }
+
+    /**
+     * Map a BookingEntity to a BookingResponse DTO.
+     */
+    private BookingDTO.BookingResponse mapToResponse(BookingEntity entity) {
+        return BookingDTO.BookingResponse.builder()
+                .id(entity.getId())
+                .facilityId(entity.getFacility().getId())
+                .facilityName(entity.getFacility().getName())
+                .facilityLocation(entity.getFacility().getLocation())
+                .facilityType(entity.getFacility().getFacilityType().name())
+                .userId(entity.getUser().getId())
+                .userName(entity.getUser().getName())
+                .userEmail(entity.getUser().getEmail())
+                .bookingDate(entity.getBookingDate())
+                .startTime(entity.getStartTime())
+                .endTime(entity.getEndTime())
+                .purpose(entity.getPurpose())
+                .expectedAttendees(entity.getExpectedAttendees())
+                .status(entity.getStatus().name())
+                .adminRemarks(entity.getAdminRemarks())
+                .reviewedByName(entity.getReviewedBy() != null
+                        ? entity.getReviewedBy().getName() : null)
+                .reviewedAt(entity.getReviewedAt())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+}
