@@ -114,25 +114,14 @@ public class UserService {
                 .build();
     }
 
-    // ==================== Profile Retrieval ====================
-
-    /**
-     * Get the authenticated user's profile by email.
-     *
-     * @param email the user's email (from JWT)
-     * @return the user's profile DTO
-     */
+  
     @Transactional(readOnly = true)
     public UserDTO getCurrentUser(String email) {
         User user = findUserByEmail(email);
         return mapToDTO(user);
     }
 
-    /**
-     * Get all users in the system (admin only).
-     *
-     * @return list of all user DTOs
-     */
+ 
     @Transactional(readOnly = true)
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll()
@@ -141,25 +130,14 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get a specific user by ID (admin only).
-     *
-     * @param userId the user's ID
-     * @return the user's profile DTO
-     */
+  
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long userId) {
         User user = findUserById(userId);
         return mapToDTO(user);
     }
 
-    /**
-     * Get all users with a specific role (admin only).
-     * Useful for listing technicians when assigning to tickets.
-     *
-     * @param role the role to filter by
-     * @return list of user DTOs with the specified role
-     */
+
     @Transactional(readOnly = true)
     public List<UserDTO> getUsersByRole(Role role) {
         return userRepository.findByRole(role)
@@ -284,12 +262,7 @@ public class UserService {
         return mapToDTO(savedUser);
     }
 
-    /**
-     * Enable a previously disabled user account (admin only).
-     *
-     * @param userId the target user's ID
-     * @return the updated user DTO
-     */
+   
     public UserDTO enableUser(Long userId) {
         User targetUser = findUserById(userId);
         targetUser.setEnabled(true);
