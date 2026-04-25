@@ -34,7 +34,7 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    // ==================== Authenticated Endpoints ====================
+    // ==================== Authenticated Endpoints =================
 
     /**
      * Create a new booking request (any authenticated user).

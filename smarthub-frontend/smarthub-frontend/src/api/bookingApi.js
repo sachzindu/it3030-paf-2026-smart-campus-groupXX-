@@ -25,7 +25,6 @@ export const getBookingById = (id) => api.get(`/api/bookings/${id}`);
  * Get all bookings with optional filters (ADMIN only).
  * @param {Object} params - { status, facilityId }
  */
-
 export const getAllBookings = (params) =>
   api.get('/api/bookings', { params });
 

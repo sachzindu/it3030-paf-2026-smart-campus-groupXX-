@@ -94,7 +94,7 @@ export default function BookingDetailPage() {
     (booking?.status === 'PENDING' || booking?.status === 'APPROVED');
   const canReview = isAdmin && booking?.status === 'PENDING';
 
- if (loading) {
+  if (loading) {
     return (
       <DashboardLayout>
         <div className="flex justify-center py-20">

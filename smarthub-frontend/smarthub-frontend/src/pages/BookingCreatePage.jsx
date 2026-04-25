@@ -113,7 +113,7 @@ export default function BookingCreatePage() {
   };
 
   return (
- <DashboardLayout>
+    <DashboardLayout>
       <div className="max-w-2xl animate-fade-in">
         {/* Back */}
         <button
@@ -292,7 +292,7 @@ export default function BookingCreatePage() {
 
               {/* Expected Attendees */}
               <div>
-  <label className="block text-xs font-semibold text-muted mb-1.5 uppercase tracking-wider">
+                <label className="block text-xs font-semibold text-muted mb-1.5 uppercase tracking-wider">
                   Expected Attendees
                 </label>
                 <input
@@ -340,4 +340,3 @@ export default function BookingCreatePage() {
     </DashboardLayout>
   );
 }
-                 

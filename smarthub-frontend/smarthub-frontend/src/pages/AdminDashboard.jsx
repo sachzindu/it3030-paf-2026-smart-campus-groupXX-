@@ -31,6 +31,7 @@ const BOOKING_STATUS_DOT = {
 };
 
 const INCIDENT_STATUS_COLORS = {
+  PENDING: 'bg-warning/10 text-warning',
   OPEN: 'bg-primary/10 text-primary',
   IN_PROGRESS: 'bg-warning/10 text-warning',
   RESOLVED: 'bg-success/10 text-success',
@@ -38,6 +39,7 @@ const INCIDENT_STATUS_COLORS = {
   REJECTED: 'bg-danger/10 text-danger',
 };
 const INCIDENT_STATUS_DOT = {
+  PENDING: 'bg-warning',
   OPEN: 'bg-primary',
   IN_PROGRESS: 'bg-warning',
   RESOLVED: 'bg-success',
@@ -196,11 +198,11 @@ export default function AdminDashboard() {
 
   const incidentStats = useMemo(() => {
     const total = incidents.length;
-    const open = incidents.filter((i) => i.status === 'OPEN').length;
+    const open = incidents.filter((i) => i.status === 'PENDING' || i.status === 'OPEN').length;
     const inProgress = incidents.filter((i) => i.status === 'IN_PROGRESS').length;
     const resolved = incidents.filter((i) => i.status === 'RESOLVED' || i.status === 'CLOSED').length;
     const critical = incidents.filter((i) => i.priority === 'CRITICAL' && i.status !== 'RESOLVED' && i.status !== 'CLOSED').length;
-    const unassigned = incidents.filter((i) => !i.assigneeId && i.status === 'OPEN').length;
+    const unassigned = incidents.filter((i) => !i.assigneeId && (i.status === 'PENDING' || i.status === 'OPEN')).length;
     return { total, open, inProgress, resolved, critical, unassigned };
   }, [incidents]);
 
@@ -712,12 +714,6 @@ export default function AdminDashboard() {
             icon={<TicketIcon className="w-5 h-5 text-violet" />}
             bgColor="bg-violet/5" borderColor="border-violet/10"
             onClick={() => navigate('/incidents')}
-          />
-          <QuickLinkCard
-            title="Report Incident"
-            icon={<AlertIcon className="w-5 h-5 text-warning" />}
-            bgColor="bg-warning/5" borderColor="border-warning/10"
-            onClick={() => navigate('/incidents/new')}
           />
         </div>
       </div>

@@ -14,6 +14,7 @@ import { getAssignedIncidents, getAllIncidents, updateStatus } from '../api/inci
 // ===========================
 
 const INCIDENT_STATUS_COLORS = {
+  PENDING: 'bg-warning/10 text-warning',
   OPEN: 'bg-primary/10 text-primary',
   IN_PROGRESS: 'bg-warning/10 text-warning',
   RESOLVED: 'bg-success/10 text-success',
@@ -21,6 +22,7 @@ const INCIDENT_STATUS_COLORS = {
   REJECTED: 'bg-danger/10 text-danger',
 };
 const INCIDENT_STATUS_DOT = {
+  PENDING: 'bg-warning',
   OPEN: 'bg-primary',
   IN_PROGRESS: 'bg-warning',
   RESOLVED: 'bg-success',
@@ -135,7 +137,7 @@ export default function TechnicianDashboard() {
 
   const stats = useMemo(() => {
     const total = assignedIncidents.length;
-    const open = assignedIncidents.filter((i) => i.status === 'OPEN').length;
+    const open = assignedIncidents.filter((i) => i.status === 'PENDING' || i.status === 'OPEN').length;
     const inProgress = assignedIncidents.filter((i) => i.status === 'IN_PROGRESS').length;
     const resolved = assignedIncidents.filter((i) => i.status === 'RESOLVED' || i.status === 'CLOSED').length;
     const resolvedToday = assignedIncidents.filter(
@@ -149,8 +151,8 @@ export default function TechnicianDashboard() {
     ).length;
 
     // All-tickets stats (for context)
-    const allOpen = allIncidents.filter((i) => i.status === 'OPEN').length;
-    const allUnassigned = allIncidents.filter((i) => !i.assigneeId && i.status === 'OPEN').length;
+    const allOpen = allIncidents.filter((i) => i.status === 'PENDING' || i.status === 'OPEN').length;
+    const allUnassigned = allIncidents.filter((i) => !i.assigneeId && (i.status === 'PENDING' || i.status === 'OPEN')).length;
 
     return { total, open, inProgress, resolved, resolvedToday, critical, high, allOpen, allUnassigned };
   }, [assignedIncidents, allIncidents]);
@@ -164,7 +166,7 @@ export default function TechnicianDashboard() {
     switch (assignedFilter) {
       case 'ACTIVE':
         filtered = assignedIncidents.filter(
-          (i) => i.status === 'OPEN' || i.status === 'IN_PROGRESS'
+          (i) => i.status === 'PENDING' || i.status === 'OPEN' || i.status === 'IN_PROGRESS'
         );
         break;
       case 'RESOLVED':
@@ -196,7 +198,7 @@ export default function TechnicianDashboard() {
 
   const recentUnassigned = useMemo(() => {
     return [...allIncidents]
-      .filter((i) => !i.assigneeId && i.status === 'OPEN')
+      .filter((i) => !i.assigneeId && (i.status === 'PENDING' || i.status === 'OPEN'))
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5);
   }, [allIncidents]);
@@ -223,7 +225,6 @@ export default function TechnicianDashboard() {
   // ===========================
 
   const firstName = user?.name?.split(' ')[0] || 'Technician';
-  const isLoading = loadingAssigned || loadingAll;
 
   const statCards = [
     {

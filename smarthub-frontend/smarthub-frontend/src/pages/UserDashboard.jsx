@@ -29,6 +29,7 @@ const BOOKING_STATUS_DOT = {
 };
 
 const INCIDENT_STATUS_COLORS = {
+  PENDING: 'bg-warning/10 text-warning',
   OPEN: 'bg-primary/10 text-primary',
   IN_PROGRESS: 'bg-warning/10 text-warning',
   RESOLVED: 'bg-success/10 text-success',
@@ -37,6 +38,7 @@ const INCIDENT_STATUS_COLORS = {
 };
 
 const INCIDENT_STATUS_DOT = {
+  PENDING: 'bg-warning',
   OPEN: 'bg-primary',
   IN_PROGRESS: 'bg-warning',
   RESOLVED: 'bg-success',
@@ -140,7 +142,7 @@ export default function UserDashboard() {
 
   const incidentStats = useMemo(() => {
     const total = incidents.length;
-    const open = incidents.filter((i) => i.status === 'OPEN').length;
+    const open = incidents.filter((i) => i.status === 'PENDING' || i.status === 'OPEN').length;
     const inProgress = incidents.filter((i) => i.status === 'IN_PROGRESS').length;
     const resolved = incidents.filter(
       (i) => i.status === 'RESOLVED' || i.status === 'CLOSED'
@@ -173,7 +175,6 @@ export default function UserDashboard() {
       .slice(0, 3);
   }, [bookings]);
 
-  const isLoading = loadingBookings || loadingIncidents;
   const firstName = user?.name?.split(' ')[0] || 'there';
 
   // ===========================
@@ -481,7 +482,7 @@ export default function UserDashboard() {
                           {incident.status?.replace('_', ' ')}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-muted">
+                      <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted">
                         <span className={`font-medium ${PRIORITY_COLORS[incident.priority] || ''}`}>
                           {incident.priority}
                         </span>
@@ -489,6 +490,10 @@ export default function UserDashboard() {
                         <span>{incident.category}</span>
                         <span className="text-border">•</span>
                         <span>{formatDate(incident.createdAt)}</span>
+                        <span className="text-border">•</span>
+                        <span>
+                          {incident.assigneeName ? `Assigned: ${incident.assigneeName}` : 'Unassigned'}
+                        </span>
                       </div>
                       {incident.location && (
                         <p className="text-xs text-muted/70 mt-1 truncate flex items-center gap-1">
@@ -497,7 +502,10 @@ export default function UserDashboard() {
                         </p>
                       )}
                     </div>
-                    <ChevronRightIcon className="w-4 h-4 text-muted flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-xs font-semibold text-primary flex-shrink-0">
+                      <span className="hidden sm:inline">View</span>
+                      <ChevronRightIcon className="w-4 h-4" />
+                    </div>
                   </button>
                 ))}
             </div>
