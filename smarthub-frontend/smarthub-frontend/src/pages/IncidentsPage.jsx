@@ -2,7 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
-import { getMyIncidents, getAllIncidents, getAssignedIncidents } from '../api/incidentApi';
+import {
+  getMyIncidents,
+  getAllIncidents,
+  getAssignedIncidents,
+  updateStatus,
+  deleteIncident,
+} from '../api/incidentApi';
 
 const STATUS_COLORS = {
   PENDING: 'bg-warning/10 text-warning',
@@ -29,6 +35,8 @@ export default function IncidentsPage() {
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [rowUpdating, setRowUpdating] = useState({});
+  const [deletingId, setDeletingId] = useState(null);
   
   // For Technician/Admin toggles if they want to see "All" vs "Assigned/My"
   const [viewMode, setViewMode] = useState(isTechnician ? 'ASSIGNED' : 'ALL');
@@ -60,6 +68,47 @@ export default function IncidentsPage() {
   useEffect(() => {
     fetchIncidents();
   }, [fetchIncidents]);
+
+  const handleRowStatusUpdate = async (ticket, nextStatus) => {
+    if (ticket.status === nextStatus) return;
+
+    const payload = { status: nextStatus };
+    if (nextStatus === 'RESOLVED' || nextStatus === 'REJECTED') {
+      const notes = window.prompt(
+        nextStatus === 'RESOLVED'
+          ? 'Add resolution notes:'
+          : 'Add rejection reason:'
+      );
+      if (!notes?.trim()) {
+        alert('Notes are required for this status.');
+        return;
+      }
+      payload.resolutionNotes = notes.trim();
+    }
+
+    try {
+      setRowUpdating((prev) => ({ ...prev, [ticket.id]: true }));
+      await updateStatus(ticket.id, payload);
+      await fetchIncidents();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update ticket status.');
+    } finally {
+      setRowUpdating((prev) => ({ ...prev, [ticket.id]: false }));
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId) => {
+    if (!window.confirm('Delete this pending ticket? This action cannot be undone.')) return;
+    try {
+      setDeletingId(ticketId);
+      await deleteIncident(ticketId);
+      await fetchIncidents();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete ticket.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -113,12 +162,15 @@ export default function IncidentsPage() {
                   <th className="px-6 py-4 font-semibold">Priority</th>
                   <th className="px-6 py-4 font-semibold">Category</th>
                   <th className="px-6 py-4 font-semibold">Status</th>
+                  {(isAdmin || isTechnician) && <th className="px-6 py-4 font-semibold">Update Status</th>}
                   <th className="px-6 py-4 font-semibold hidden md:table-cell">Reporter / Date</th>
                   <th className="px-6 py-4 font-semibold">Target</th>
+                  {!isAdmin && !isTechnician && <th className="px-6 py-4 font-semibold">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
                 {incidents.map((t) => (
+                  // Keep row-click navigation, but stop propagation inside inline action controls.
                   <tr 
                     key={t.id} 
                     className="hover:bg-surface/50 cursor-pointer transition"
@@ -137,6 +189,23 @@ export default function IncidentsPage() {
                         {t.status.replace('_', ' ')}
                       </span>
                     </td>
+                    {(isAdmin || isTechnician) && (
+                      <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                        <select
+                          value={t.status}
+                          onChange={(e) => handleRowStatusUpdate(t, e.target.value)}
+                          disabled={Boolean(rowUpdating[t.id])}
+                          className="px-2.5 py-1.5 border border-border rounded-lg text-xs outline-none"
+                        >
+                          <option value="PENDING">Pending</option>
+                          <option value="OPEN">Open</option>
+                          <option value="IN_PROGRESS">In Progress</option>
+                          <option value="RESOLVED">Resolved</option>
+                          <option value="CLOSED">Closed</option>
+                          <option value="REJECTED">Rejected</option>
+                        </select>
+                      </td>
+                    )}
                     <td className="px-6 py-4 hidden md:table-cell">
                       <p className="text-ink">{t.reporterName}</p>
                       <p className="text-xs text-muted">{new Date(t.createdAt).toLocaleDateString()}</p>
@@ -144,6 +213,29 @@ export default function IncidentsPage() {
                     <td className="px-6 py-4">
                       <button className="text-primary font-semibold hover:underline">View →</button>
                     </td>
+                    {!isAdmin && !isTechnician && (
+                      <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                        {t.status === 'PENDING' ? (
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => navigate(`/incidents/${t.id}/edit`)}
+                              className="text-primary font-semibold hover:underline"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTicket(t.id)}
+                              disabled={deletingId === t.id}
+                              className="text-danger font-semibold hover:underline disabled:opacity-60"
+                            >
+                              {deletingId === t.id ? 'Deleting...' : 'Delete'}
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted">Locked after pending</span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
