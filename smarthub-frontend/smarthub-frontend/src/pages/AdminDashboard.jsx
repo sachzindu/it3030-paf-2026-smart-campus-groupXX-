@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
 import { getAllBookings, reviewBooking } from '../api/bookingApi';
-import { getAllIncidents } from '../api/incidentApi';
+import { getAllIncidents, updateStatus } from '../api/incidentApi';
 import { getAllFacilities } from '../api/facilityApi';
 import api from '../api/axios';
 import UserManagementPanel from '../components/UserManagementPanel';
@@ -46,6 +46,8 @@ const INCIDENT_STATUS_DOT = {
   CLOSED: 'bg-muted',
   REJECTED: 'bg-danger',
 };
+
+const INCIDENT_STATUS_OPTIONS = ['PENDING', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED'];
 
 const PRIORITY_COLORS = {
   LOW: 'text-success',
@@ -110,6 +112,7 @@ export default function AdminDashboard() {
   const [adminRemarks, setAdminRemarks] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState('');
+  const [incidentStatusUpdating, setIncidentStatusUpdating] = useState({});
 
   // ===========================
   // Data Fetching
@@ -268,12 +271,68 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleIncidentStatusUpdate = async (incident, nextStatus) => {
+    if (incident.status === nextStatus) return;
+    if (incident.adminLocked) {
+      alert('Admin updates are locked for this ticket.');
+      return;
+    }
+
+    const payload = { status: nextStatus };
+    if (nextStatus === 'RESOLVED' || nextStatus === 'REJECTED') {
+      const notes = window.prompt(
+        nextStatus === 'RESOLVED'
+          ? 'Add resolution notes:'
+          : 'Add rejection reason:'
+      );
+      if (!notes?.trim()) {
+        alert('Notes are required for this status.');
+        return;
+      }
+      payload.resolutionNotes = notes.trim();
+    }
+
+    try {
+      setIncidentStatusUpdating((prev) => ({ ...prev, [incident.id]: true }));
+      const res = await updateStatus(incident.id, payload);
+      const updated = res.data?.data;
+
+      // Reflect status + lock immediately to prevent a second blocked update attempt.
+      setIncidents((prev) =>
+        prev.map((item) =>
+          item.id === incident.id
+            ? {
+                ...item,
+                ...(updated || {}),
+                status: updated?.status || nextStatus,
+                resolutionNotes: payload.resolutionNotes ?? item.resolutionNotes,
+                adminLocked: true,
+              }
+            : item
+        )
+      );
+    } catch (err) {
+      const message = err.response?.data?.message || 'Failed to update incident status.';
+      if (String(message).toLowerCase().includes('locked')) {
+        setIncidents((prev) =>
+          prev.map((item) =>
+            item.id === incident.id
+              ? { ...item, adminLocked: true }
+              : item
+          )
+        );
+      }
+      alert(message);
+    } finally {
+      setIncidentStatusUpdating((prev) => ({ ...prev, [incident.id]: false }));
+    }
+  };
+
   // ===========================
   // Stat Cards Config
   // ===========================
 
   const firstName = user?.name?.split(' ')[0] || 'Admin';
-  const isLoading = loadingUsers || loadingBookings || loadingIncidents || loadingFacilities;
 
   const statCards = [
     {
@@ -388,23 +447,39 @@ export default function AdminDashboard() {
             </div>
             <div className="space-y-2">
               {criticalIncidents.slice(0, 3).map((inc) => (
-                <button
+                <div
                   key={inc.id}
-                  onClick={() => navigate(`/incidents/${inc.id}`)}
-                  className="w-full flex items-center justify-between bg-white rounded-xl px-4 py-3 border border-danger/10 hover:shadow-md transition-all text-left"
+                  className="w-full flex items-center justify-between gap-3 bg-white rounded-xl px-4 py-3 border border-danger/10 hover:shadow-md transition-all"
                 >
-                  <div className="min-w-0 flex-1">
+                  <button
+                    onClick={() => navigate(`/incidents/${inc.id}`)}
+                    className="min-w-0 flex-1 text-left"
+                  >
                     <p className="text-sm font-semibold text-ink truncate">{inc.title}</p>
                     <p className="text-xs text-muted mt-0.5">
                       {inc.location} • Reported {formatDate(inc.createdAt)}
                       {inc.assigneeName ? ` • Assigned to ${inc.assigneeName}` : ' • Unassigned'}
                     </p>
+                  </button>
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${INCIDENT_STATUS_COLORS[inc.status]}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${INCIDENT_STATUS_DOT[inc.status]}`} />
+                      {inc.status?.replace('_', ' ')}
+                    </span>
+                    <select
+                      value={inc.status}
+                      onChange={(e) => handleIncidentStatusUpdate(inc, e.target.value)}
+                      disabled={Boolean(incidentStatusUpdating[inc.id]) || inc.adminLocked}
+                      className="px-2 py-1 border border-border rounded-lg text-xs bg-white outline-none"
+                    >
+                      {INCIDENT_STATUS_OPTIONS.map((status) => (
+                        <option key={status} value={status}>
+                          {status.replace('_', ' ')}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ml-3 ${INCIDENT_STATUS_COLORS[inc.status]}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${INCIDENT_STATUS_DOT[inc.status]}`} />
-                    {inc.status?.replace('_', ' ')}
-                  </span>
-                </button>
+                </div>
               ))}
               {criticalIncidents.length > 3 && (
                 <button
@@ -539,13 +614,15 @@ export default function AdminDashboard() {
               {!loadingIncidents &&
                 !errorIncidents &&
                 recentIncidents.map((incident, idx) => (
-                  <button
+                  <div
                     key={incident.id}
-                    onClick={() => navigate(`/incidents/${incident.id}`)}
-                    className="w-full flex items-center gap-4 px-6 py-4 hover:bg-surface/50 transition-colors text-left animate-fade-in"
+                    className="w-full flex items-center gap-3 px-6 py-4 hover:bg-surface/50 transition-colors animate-fade-in"
                     style={{ animationDelay: `${idx * 50}ms` }}
                   >
-                    <div className="flex-1 min-w-0">
+                    <button
+                      onClick={() => navigate(`/incidents/${incident.id}`)}
+                      className="flex-1 min-w-0 text-left"
+                    >
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-ink truncate">{incident.title}</p>
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${INCIDENT_STATUS_COLORS[incident.status]}`}>
@@ -568,9 +645,23 @@ export default function AdminDashboard() {
                           </>
                         )}
                       </div>
+                    </button>
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <select
+                        value={incident.status}
+                        onChange={(e) => handleIncidentStatusUpdate(incident, e.target.value)}
+                        disabled={Boolean(incidentStatusUpdating[incident.id]) || incident.adminLocked}
+                        className="px-2.5 py-1.5 border border-border rounded-lg text-xs bg-white outline-none"
+                      >
+                        {INCIDENT_STATUS_OPTIONS.map((status) => (
+                          <option key={status} value={status}>
+                            {status.replace('_', ' ')}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronRightIcon className="w-4 h-4 text-muted flex-shrink-0" />
                     </div>
-                    <ChevronRightIcon className="w-4 h-4 text-muted flex-shrink-0" />
-                  </button>
+                  </div>
                 ))}
             </div>
           </div>
