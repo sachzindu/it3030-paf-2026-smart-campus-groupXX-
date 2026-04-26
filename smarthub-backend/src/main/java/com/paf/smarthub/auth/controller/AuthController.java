@@ -90,6 +90,35 @@ public class AuthController {
     }
 
     /**
+     * Create a new user account with a specific role (ADMIN only).
+     * Used for adding technicians and users to the system.
+     */
+    @PostMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserDTO>> createUser(
+            @Valid @RequestBody AdminCreateUserRequest request,
+            Authentication authentication) {
+        String adminEmail = authentication.getName();
+        UserDTO createdUser = userService.adminCreateUser(request, adminEmail);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("User created successfully", createdUser));
+    }
+
+    /**
+     * Update a user's name and/or role (ADMIN only).
+     */
+    @PutMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserDTO>> updateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody AdminUpdateUserRequest request,
+            Authentication authentication) {
+        String adminEmail = authentication.getName();
+        UserDTO updatedUser = userService.adminUpdateUser(id, request, adminEmail);
+        return ResponseEntity.ok(ApiResponse.success("User updated successfully", updatedUser));
+    }
+
+    /**
      * Get a specific user by ID.
      */
     @GetMapping("/users/{id}")

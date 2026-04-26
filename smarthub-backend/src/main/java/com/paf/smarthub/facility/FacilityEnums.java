@@ -25,8 +25,8 @@ public class FacilityEnums {
     public enum FacilityStatus {
         ACTIVE,
         MAINTENANCE,
-        OUT_OF_SERVICE
-    }
+       OUT_OF_SERVICE
+
 
     /**
      * Sub-type for equipment-category resources.

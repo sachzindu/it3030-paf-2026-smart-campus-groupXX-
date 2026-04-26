@@ -125,25 +125,14 @@ public class UserService {
                 .build();
     }
 
-    // ==================== Profile Retrieval ====================
-
-    /**
-     * Get the authenticated user's profile by email.
-     *
-     * @param email the user's email (from JWT)
-     * @return the user's profile DTO
-     */
+  
     @Transactional(readOnly = true)
     public UserDTO getCurrentUser(String email) {
         User user = findUserByEmail(email);
         return mapToDTO(user);
     }
 
-    /**
-     * Get all users in the system (admin only).
-     *
-     * @return list of all user DTOs
-     */
+ 
     @Transactional(readOnly = true)
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll()
@@ -152,25 +141,14 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get a specific user by ID (admin only).
-     *
-     * @param userId the user's ID
-     * @return the user's profile DTO
-     */
+  
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long userId) {
         User user = findUserById(userId);
         return mapToDTO(user);
     }
 
-    /**
-     * Get all users with a specific role (admin only).
-     * Useful for listing technicians when assigning to tickets.
-     *
-     * @param role the role to filter by
-     * @return list of user DTOs with the specified role
-     */
+
     @Transactional(readOnly = true)
     public List<UserDTO> getUsersByRole(Role role) {
         return userRepository.findByRole(role)
@@ -180,6 +158,69 @@ public class UserService {
     }
 
     // ==================== Admin Operations ====================
+
+    /**
+     * Create a new user account with a specific role (admin only).
+     * Used for adding technicians and users to the system.
+     *
+     * @param request      the admin create request containing name, email, password, role
+     * @param currentEmail the admin performing the action
+     * @return the created user DTO
+     */
+    public UserDTO adminCreateUser(AdminCreateUserRequest request, String currentEmail) {
+        if (userRepository.existsByEmail(request.getEmail().toLowerCase().trim())) {
+            throw new DuplicateResourceException("User", "email", request.getEmail());
+        }
+
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail().toLowerCase().trim())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole())
+                .authProvider(AuthProvider.LOCAL)
+                .enabled(true)
+                .build();
+
+        User savedUser = userRepository.save(user);
+        log.info("Admin created user: {} with role: {} (by {})",
+                savedUser.getEmail(), savedUser.getRole(), currentEmail);
+
+        return mapToDTO(savedUser);
+    }
+
+    /**
+     * Update a user's name and/or role (admin only).
+     * Only non-null fields in the request are applied.
+     * Prevents admins from demoting themselves.
+     *
+     * @param userId       the target user's ID
+     * @param request      the update request containing optional name and role
+     * @param currentEmail the admin performing the action
+     * @return the updated user DTO
+     */
+    public UserDTO adminUpdateUser(Long userId, AdminUpdateUserRequest request, String currentEmail) {
+        User targetUser = findUserById(userId);
+
+        // Prevent self-demotion
+        if (request.getRole() != null
+                && targetUser.getEmail().equalsIgnoreCase(currentEmail)
+                && request.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("You cannot change your own role. " +
+                    "Another admin must perform this action.");
+        }
+
+        if (request.getName() != null && !request.getName().isBlank()) {
+            targetUser.setName(request.getName());
+        }
+        if (request.getRole() != null) {
+            targetUser.setRole(request.getRole());
+        }
+
+        User savedUser = userRepository.save(targetUser);
+        log.info("Admin updated user: {} (by {})", targetUser.getEmail(), currentEmail);
+
+        return mapToDTO(savedUser);
+    }
 
     /**
      * Update a user's role (admin only).
@@ -232,12 +273,7 @@ public class UserService {
         return mapToDTO(savedUser);
     }
 
-    /**
-     * Enable a previously disabled user account (admin only).
-     *
-     * @param userId the target user's ID
-     * @return the updated user DTO
-     */
+   
     public UserDTO enableUser(Long userId) {
         User targetUser = findUserById(userId);
         targetUser.setEnabled(true);

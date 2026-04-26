@@ -35,6 +35,13 @@ export const getAllFacilities = (type = '', status = '') => {
 /**
  * Get a specific facility by ID.
  * @param {number} id - Facility ID
+/**
+ * Get all facilities.
+ */
+export const getAllFacilities = () => api.get('/api/facilities');
+
+/**
+ * Get a specific facility by ID.
  */
 export const getFacilityById = (id) => api.get(`/api/facilities/${id}`);
 
