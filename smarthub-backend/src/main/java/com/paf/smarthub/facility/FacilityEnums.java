@@ -20,11 +20,13 @@ public class FacilityEnums {
     /**
      * Operational status of a facility/asset.
      * OUT_OF_SERVICE resources cannot be booked.
+     * MAINTENANCE indicates the facility is temporarily unavailable.
      */
     public enum FacilityStatus {
         ACTIVE,
-        OUT_OF_SERVICE
-    }
+        MAINTENANCE,
+       OUT_OF_SERVICE
+
 
     /**
      * Sub-type for equipment-category resources.

@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository for FacilityEntity persistence operations.
@@ -28,6 +29,9 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
 
     boolean existsByNameIgnoreCase(String name);
 
+        Optional<FacilityEntity> findByName(String name);
+    Optional<FacilityEntity> findByNameIgnoreCase(String name);
+
     /**
      * Combined search/filter query supporting keyword search (name or location),
      * type filter, status filter, minimum capacity, and location filter.
@@ -47,3 +51,6 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
             @Param("minCapacity") Integer minCapacity,
             @Param("location") String location);
 }
+
+
+

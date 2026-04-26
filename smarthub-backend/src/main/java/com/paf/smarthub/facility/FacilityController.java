@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -47,6 +48,18 @@ public class FacilityController {
     }
 
     /**
+     * Upload a facility image (ADMIN only).
+     */
+    @PostMapping("/upload-image")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<FacilityDTO.ImageUploadResponse>> uploadFacilityImage(
+            @RequestParam("file") MultipartFile file) {
+        FacilityDTO.ImageUploadResponse response = facilityService.uploadFacilityImage(file);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Facility image uploaded successfully", response));
+    }
+
+    /**
      * Update an existing facility (ADMIN only).
      */
     @PutMapping("/{id}")
@@ -71,11 +84,14 @@ public class FacilityController {
     // ==================== Authenticated Endpoints ====================
 
     /**
-     * Get all facilities.
+     * Get all facilities with optional filtering by type and status.
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<FacilityDTO.FacilityResponse>>> getAllFacilities() {
-        List<FacilityDTO.FacilityResponse> facilities = facilityService.getAllFacilities();
+    public ResponseEntity<ApiResponse<List<FacilityDTO.FacilityResponse>>> getAllFacilities(
+            @RequestParam(required = false) FacilityEnums.FacilityType type,
+            @RequestParam(required = false) FacilityEnums.FacilityStatus status) {
+        List<FacilityDTO.FacilityResponse> facilities = 
+                facilityService.getAllFacilitiesFiltered(type, status);
         return ResponseEntity.ok(
                 ApiResponse.success("Facilities retrieved successfully", facilities));
     }
@@ -106,5 +122,17 @@ public class FacilityController {
                 facilityService.searchFacilities(keyword, type, status, minCapacity, location);
         return ResponseEntity.ok(
                 ApiResponse.success("Facilities search results", facilities));
+    }
+
+    /**
+     * Check if a facility is available during a requested time slot.
+     */
+    @PostMapping("/{id}/check-availability")
+    public ResponseEntity<ApiResponse<FacilityDTO.AvailabilityResponse>> checkAvailability(
+            @PathVariable Long id,
+            @Valid @RequestBody FacilityDTO.AvailabilityRequest request) {
+        FacilityDTO.AvailabilityResponse response = facilityService.checkAvailability(id, request);
+        return ResponseEntity.ok(
+                ApiResponse.success("Availability check completed", response));
     }
 }

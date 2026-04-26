@@ -1,0 +1,10 @@
+.\mvnw.cmd : The term '.\mvnw.cmd' is not recognized as the name of a cmdlet, 
+function, script file, or operable program. Check the spelling of the name, or 
+if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ .\mvnw.cmd spring-boot:run 2>&1
++ ~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (.\mvnw.cmd:String) [], CommandN 
+   otFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 

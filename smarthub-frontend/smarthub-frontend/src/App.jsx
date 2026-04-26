@@ -8,6 +8,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import TechnicianDashboard from './pages/TechnicianDashboard';
 import UserDashboard from './pages/UserDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import FacilityList from './components/Facilities/FacilityList';
+import FacilityDetail from './components/Facilities/FacilityDetail';
+import FacilityForm from './components/Facilities/FacilityForm';
 
 // Facility pages
 import FacilitiesPage from './pages/FacilitiesPage';
@@ -215,6 +218,88 @@ function AppRoutes() {
             />
         </Routes>
     );
+  }
+
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
+
+      {/* Protected Routes */}
+      <Route
+        path="/dashboard/admin"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/technician"
+        element={
+          <ProtectedRoute allowedRoles={['TECHNICIAN']}>
+            <TechnicianDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/user"
+        element={
+          <ProtectedRoute allowedRoles={['USER']}>
+            <UserDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Facility Routes - Accessible to all authenticated users */}
+      <Route
+        path="/facilities"
+        element={
+          <ProtectedRoute>
+            <FacilityList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/facilities/:id"
+        element={
+          <ProtectedRoute>
+            <FacilityDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/facilities/new"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <FacilityForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/facilities/:id/edit"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <FacilityForm />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Default Route: redirect based on auth state */}
+      <Route
+        path="*"
+        element={
+          isAuthenticated && user ? (
+            <Navigate to={getDashboardPath(user.role)} replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+    </Routes>
+  );
 }
 
 function App() {

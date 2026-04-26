@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 /**
  * Data transfer objects for the Facility module.
@@ -38,6 +39,8 @@ public class FacilityDTO {
         private LocalTime availableFrom;
         private LocalTime availableTo;
         private String imageUrl;
+        private Integer healthScore;
+        private List<String> improvementSuggestions;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
     }
@@ -111,5 +114,50 @@ public class FacilityDTO {
         private LocalTime availableTo;
 
         private String imageUrl;
+    }
+
+    /**
+     * Request DTO for checking facility availability.
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AvailabilityRequest {
+
+        @NotNull(message = "Booking date is required")
+        private String bookingDate;
+
+        @NotNull(message = "Start time is required")
+        private String startTime;
+
+        @NotNull(message = "End time is required")
+        private String endTime;
+    }
+
+    /**
+     * Response DTO for availability check results.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AvailabilityResponse {
+        private Boolean available;
+        private String message;
+        private LocalTime facilityOpenFrom;
+        private LocalTime facilityOpenUntil;
+        private String requestedTimeSlot;
+    }
+
+    /**
+     * Response DTO for facility image uploads.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ImageUploadResponse {
+        private String imageUrl;
+        private String fileName;
     }
 }

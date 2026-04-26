@@ -1,0 +1,282 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< com.paf:smarthub >--------------------------
+[INFO] Building  0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ smarthub ---
+[INFO] Deleting E:\University\3rd Year\3rd Year 2nd sem\IT semester 2\PAF\Project\it3030-paf-2026-smart-campus-groupXX-\smarthub-backend\target
+[INFO] 
+[INFO] >>> spring-boot:4.0.5:run (default-cli) > test-compile @ smarthub >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ smarthub ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ smarthub ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 52 source files with javac [debug parameters release 21] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ smarthub ---
+[INFO] skip non existing resourceDirectory E:\University\3rd Year\3rd Year 2nd sem\IT semester 2\PAF\Project\it3030-paf-2026-smart-campus-groupXX-\smarthub-backend\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ smarthub ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 21] to target\test-classes
+[INFO] 
+[INFO] <<< spring-boot:4.0.5:run (default-cli) < test-compile @ smarthub <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:4.0.5:run (default-cli) @ smarthub ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.5)
+
+2026-04-21T17:45:22.708+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] com.paf.smarthub.SmarthubApplication     : Starting SmarthubApplication using Java 22.0.2 with PID 48112 (E:\University\3rd Year\3rd Year 2nd sem\IT semester 2\PAF\Project\it3030-paf-2026-smart-campus-groupXX-\smarthub-backend\target\classes started by CHAMA COMPUTERS in E:\University\3rd Year\3rd Year 2nd sem\IT semester 2\PAF\Project\it3030-paf-2026-smart-campus-groupXX-\smarthub-backend)
+2026-04-21T17:45:22.712+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] com.paf.smarthub.SmarthubApplication     : No active profile set, falling back to 1 default profile: "default"
+2026-04-21T17:45:22.773+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-04-21T17:45:22.773+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-04-21T17:45:23.493+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-21T17:45:23.558+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 54 ms. Found 3 JPA repository interfaces.
+2026-04-21T17:45:24.142+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-04-21T17:45:24.156+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-21T17:45:24.156+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.20]
+2026-04-21T17:45:24.204+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1431 ms
+2026-04-21T17:45:24.359+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-04-21T17:45:24.402+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.7.Final
+2026-04-21T17:45:24.796+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-21T17:45:24.826+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-21T17:45:24.998+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:smart_campus_db user=SA
+2026-04-21T17:45:24.999+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-21T17:45:25.017+05:30  WARN 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-21T17:45:25.036+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:mem:smart_campus_db]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: SMART_CAMPUS_DB/PUBLIC
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-04-21T17:45:26.002+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-21T17:45:26.023+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    drop table if exists booking cascade 
+Hibernate: 
+    drop table if exists booking cascade 
+2026-04-21T17:45:26.026+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    drop table if exists facilities cascade 
+Hibernate: 
+    drop table if exists facilities cascade 
+2026-04-21T17:45:26.026+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    drop table if exists users cascade 
+Hibernate: 
+    drop table if exists users cascade 
+2026-04-21T17:45:26.034+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    create table booking (
+        booking_date date not null,
+        end_time time(0) not null,
+        start_time time(0) not null,
+        created_at timestamp(6) not null,
+        facility_id bigint not null,
+        id bigint generated by default as identity,
+        updated_at timestamp(6) not null,
+        user_id bigint not null,
+        purpose varchar(1000),
+        reason varchar(255),
+        status enum ('APPROVED','CANCELLED','PENDING','REJECTED') not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table booking (
+        booking_date date not null,
+        end_time time(0) not null,
+        start_time time(0) not null,
+        created_at timestamp(6) not null,
+        facility_id bigint not null,
+        id bigint generated by default as identity,
+        updated_at timestamp(6) not null,
+        user_id bigint not null,
+        purpose varchar(1000),
+        reason varchar(255),
+        status enum ('APPROVED','CANCELLED','PENDING','REJECTED') not null,
+        primary key (id)
+    )
+2026-04-21T17:45:26.049+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    create table facilities (
+        available_from time(0),
+        available_to time(0),
+        capacity integer,
+        created_at timestamp(6) not null,
+        id bigint generated by default as identity,
+        updated_at timestamp(6) not null,
+        name varchar(150) not null unique,
+        image_url varchar(512),
+        description TEXT,
+        location varchar(255) not null,
+        asset_type enum ('CAMERA','LAPTOP','MICROPHONE','OTHER','PRINTER','PROJECTOR','WHITEBOARD'),
+        facility_type enum ('AUDITORIUM','EQUIPMENT','LAB','LECTURE_HALL','MEETING_ROOM') not null,
+        status enum ('ACTIVE','MAINTENANCE','OUT_OF_SERVICE') not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table facilities (
+        available_from time(0),
+        available_to time(0),
+        capacity integer,
+        created_at timestamp(6) not null,
+        id bigint generated by default as identity,
+        updated_at timestamp(6) not null,
+        name varchar(150) not null unique,
+        image_url varchar(512),
+        description TEXT,
+        location varchar(255) not null,
+        asset_type enum ('CAMERA','LAPTOP','MICROPHONE','OTHER','PRINTER','PROJECTOR','WHITEBOARD'),
+        facility_type enum ('AUDITORIUM','EQUIPMENT','LAB','LECTURE_HALL','MEETING_ROOM') not null,
+        status enum ('ACTIVE','MAINTENANCE','OUT_OF_SERVICE') not null,
+        primary key (id)
+    )
+2026-04-21T17:45:26.054+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    create table users (
+        enabled boolean not null,
+        created_at timestamp(6) not null,
+        id bigint generated by default as identity,
+        updated_at timestamp(6) not null,
+        profile_image_url varchar(512),
+        email varchar(255) not null unique,
+        google_id varchar(255) unique,
+        name varchar(255) not null,
+        password varchar(255),
+        auth_provider enum ('GOOGLE','LOCAL'),
+        role enum ('ADMIN','TECHNICIAN','USER') not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table users (
+        enabled boolean not null,
+        created_at timestamp(6) not null,
+        id bigint generated by default as identity,
+        updated_at timestamp(6) not null,
+        profile_image_url varchar(512),
+        email varchar(255) not null unique,
+        google_id varchar(255) unique,
+        name varchar(255) not null,
+        password varchar(255),
+        auth_provider enum ('GOOGLE','LOCAL'),
+        role enum ('ADMIN','TECHNICIAN','USER') not null,
+        primary key (id)
+    )
+2026-04-21T17:45:26.057+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    create index idx_facility_type 
+       on facilities (facility_type)
+Hibernate: 
+    create index idx_facility_type 
+       on facilities (facility_type)
+2026-04-21T17:45:26.059+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    create index idx_facility_status 
+       on facilities (status)
+Hibernate: 
+    create index idx_facility_status 
+       on facilities (status)
+2026-04-21T17:45:26.059+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    create index idx_facility_location 
+       on facilities (location)
+Hibernate: 
+    create index idx_facility_location 
+       on facilities (location)
+2026-04-21T17:45:26.060+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    create index idx_user_role 
+       on users (role)
+Hibernate: 
+    create index idx_user_role 
+       on users (role)
+2026-04-21T17:45:26.061+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    alter table if exists booking 
+       add constraint FK1redaew5tom8abfmql352xb40 
+       foreign key (facility_id) 
+       references facilities
+Hibernate: 
+    alter table if exists booking 
+       add constraint FK1redaew5tom8abfmql352xb40 
+       foreign key (facility_id) 
+       references facilities
+2026-04-21T17:45:26.077+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    alter table if exists booking 
+       add constraint FK7udbel7q86k041591kj6lfmvw 
+       foreign key (user_id) 
+       references users
+Hibernate: 
+    alter table if exists booking 
+       add constraint FK7udbel7q86k041591kj6lfmvw 
+       foreign key (user_id) 
+       references users
+2026-04-21T17:45:26.081+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : INSERT INTO users (name, email, password, role, auth_provider, enabled, created_at, updated_at) VALUES ('John Student', 'john.student@example.com', '$2a$10$BoGZXwLRlJ8BTKAp2BTZz.KQKqn9.TjfXpGT2Hm7aQ2X5TbBXLhPK', 'USER', 'LOCAL', true, NOW(), NOW())
+Hibernate: INSERT INTO users (name, email, password, role, auth_provider, enabled, created_at, updated_at) VALUES ('John Student', 'john.student@example.com', '$2a$10$BoGZXwLRlJ8BTKAp2BTZz.KQKqn9.TjfXpGT2Hm7aQ2X5TbBXLhPK', 'USER', 'LOCAL', true, NOW(), NOW())
+2026-04-21T17:45:26.084+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : INSERT INTO users (name, email, password, role, auth_provider, enabled, created_at, updated_at) VALUES ('Sarah Johnson', 'sarah.johnson.2026@example.com', '$2a$10$XBL1/0QNcVhBL2UVl.qZJOc7JTR.fNfJJNW.5fXMVvJ7WqPnYFVH2', 'ADMIN', 'LOCAL', true, NOW(), NOW())
+Hibernate: INSERT INTO users (name, email, password, role, auth_provider, enabled, created_at, updated_at) VALUES ('Sarah Johnson', 'sarah.johnson.2026@example.com', '$2a$10$XBL1/0QNcVhBL2UVl.qZJOc7JTR.fNfJJNW.5fXMVvJ7WqPnYFVH2', 'ADMIN', 'LOCAL', true, NOW(), NOW())
+2026-04-21T17:45:26.085+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : INSERT INTO facilities (name, description, location, facility_type, status, capacity, available_from, available_to, created_at, updated_at) VALUES ('Main Auditorium', 'Large auditorium for conferences and presentations', 'Building A, Ground Floor', 'AUDITORIUM', 'ACTIVE', 500, '08:00', '18:00', NOW(), NOW())
+Hibernate: INSERT INTO facilities (name, description, location, facility_type, status, capacity, available_from, available_to, created_at, updated_at) VALUES ('Main Auditorium', 'Large auditorium for conferences and presentations', 'Building A, Ground Floor', 'AUDITORIUM', 'ACTIVE', 500, '08:00', '18:00', NOW(), NOW())
+2026-04-21T17:45:26.087+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : INSERT INTO facilities (name, description, location, facility_type, status, capacity, available_from, available_to, created_at, updated_at) VALUES ('Computer Lab 1', 'Equipped with latest laptops and software for coding', 'Building B, 2nd Floor', 'LAB', 'ACTIVE', 30, '08:00', '17:00', NOW(), NOW())
+Hibernate: INSERT INTO facilities (name, description, location, facility_type, status, capacity, available_from, available_to, created_at, updated_at) VALUES ('Computer Lab 1', 'Equipped with latest laptops and software for coding', 'Building B, 2nd Floor', 'LAB', 'ACTIVE', 30, '08:00', '17:00', NOW(), NOW())
+2026-04-21T17:45:26.088+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : INSERT INTO facilities (name, description, location, facility_type, status, capacity, available_from, available_to, created_at, updated_at) VALUES ('Meeting Room A', 'Equipped with projector and conference phone', 'Building A, 1st Floor', 'MEETING_ROOM', 'ACTIVE', 15, '08:00', '18:00', NOW(), NOW())
+Hibernate: INSERT INTO facilities (name, description, location, facility_type, status, capacity, available_from, available_to, created_at, updated_at) VALUES ('Meeting Room A', 'Equipped with projector and conference phone', 'Building A, 1st Floor', 'MEETING_ROOM', 'ACTIVE', 15, '08:00', '18:00', NOW(), NOW())
+2026-04-21T17:45:26.089+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : INSERT INTO facilities (name, description, location, facility_type, status, capacity, asset_type, created_at, updated_at) VALUES ('Projector Cart', 'Portable projector with mounting equipment', 'Tech Store', 'EQUIPMENT', 'ACTIVE', 1, 'PROJECTOR', NOW(), NOW())
+Hibernate: INSERT INTO facilities (name, description, location, facility_type, status, capacity, asset_type, created_at, updated_at) VALUES ('Projector Cart', 'Portable projector with mounting equipment', 'Tech Store', 'EQUIPMENT', 'ACTIVE', 1, 'PROJECTOR', NOW(), NOW())
+2026-04-21T17:45:26.091+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : INSERT INTO facilities (name, description, location, facility_type, status, capacity, available_from, available_to, created_at, updated_at) VALUES ('Lecture Hall 101', 'Standard classroom with projector and whiteboard', 'Building C, 1st Floor', 'LECTURE_HALL', 'ACTIVE', 60, '08:00', '18:00', NOW(), NOW())
+Hibernate: INSERT INTO facilities (name, description, location, facility_type, status, capacity, available_from, available_to, created_at, updated_at) VALUES ('Lecture Hall 101', 'Standard classroom with projector and whiteboard', 'Building C, 1st Floor', 'LECTURE_HALL', 'ACTIVE', 60, '08:00', '18:00', NOW(), NOW())
+2026-04-21T17:45:26.094+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-21T17:45:26.166+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-04-21T17:45:26.440+05:30  WARN 48112 --- [smart-campus-backend] [  restartedMain] o.s.aop.framework.CglibAopProxy          : Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRestOperations(org.springframework.web.client.RestOperations)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-04-21T17:45:26.440+05:30  WARN 48112 --- [smart-campus-backend] [  restartedMain] o.s.aop.framework.CglibAopProxy          : Public final method [public final void org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService.setRequestEntityConverter(org.springframework.core.convert.converter.Converter)] cannot get proxied via CGLIB, consider removing the final marker or using interface-based JDK proxies.
+2026-04-21T17:45:27.382+05:30  WARN 48112 --- [smart-campus-backend] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-21T17:45:27.473+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2026-04-21T17:45:28.177+05:30  WARN 48112 --- [smart-campus-backend] [  restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-04-21T17:45:28.179+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-04-21T17:45:28.180+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    drop table if exists booking cascade 
+Hibernate: 
+    drop table if exists booking cascade 
+2026-04-21T17:45:28.183+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    drop table if exists facilities cascade 
+Hibernate: 
+    drop table if exists facilities cascade 
+2026-04-21T17:45:28.190+05:30 DEBUG 48112 --- [smart-campus-backend] [  restartedMain] org.hibernate.SQL                        : 
+    drop table if exists users cascade 
+Hibernate: 
+    drop table if exists users cascade 
+2026-04-21T17:45:28.197+05:30  WARN 48112 --- [smart-campus-backend] [  restartedMain] o.s.b.f.support.DisposableBeanAdapter    : Invocation of destroy method failed on bean with name 'inMemoryDatabaseShutdownExecutor': org.h2.jdbc.JdbcSQLNonTransientConnectionException: Database is already closed (to disable automatic closing at VM shutdown, add ";DB_CLOSE_ON_EXIT=FALSE" to the db URL) [90121-240]
+2026-04-21T17:45:28.197+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-04-21T17:45:28.197+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-04-21T17:45:28.211+05:30  INFO 48112 --- [smart-campus-backend] [  restartedMain] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-04-21T17:45:28.227+05:30 ERROR 48112 --- [smart-campus-backend] [  restartedMain] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  13.857 s
+[INFO] Finished at: 2026-04-21T17:45:28+05:30
+[INFO] ------------------------------------------------------------------------

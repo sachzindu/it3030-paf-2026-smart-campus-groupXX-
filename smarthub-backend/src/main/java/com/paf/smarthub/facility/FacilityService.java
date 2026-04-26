@@ -4,10 +4,24 @@ import com.paf.smarthub.shared.exception.DuplicateResourceException;
 import com.paf.smarthub.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.Duration;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.stream.Collectors;
 
 /**
@@ -19,11 +33,21 @@ import java.util.stream.Collectors;
 public class FacilityService {
 
     private static final Logger log = LoggerFactory.getLogger(FacilityService.class);
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            MediaType.IMAGE_JPEG_VALUE,
+            MediaType.IMAGE_PNG_VALUE,
+            "image/jpg",
+            MediaType.IMAGE_GIF_VALUE,
+            "image/webp");
 
     private final FacilityRepository facilityRepository;
+    private final String fileUploadDir;
 
-    public FacilityService(FacilityRepository facilityRepository) {
+    public FacilityService(
+            FacilityRepository facilityRepository,
+            @Value("${file.upload-dir}") String fileUploadDir) {
         this.facilityRepository = facilityRepository;
+        this.fileUploadDir = fileUploadDir;
     }
 
     // ==================== Create ====================
@@ -95,6 +119,46 @@ public class FacilityService {
     @Transactional(readOnly = true)
     public List<FacilityDTO.FacilityResponse> getAllFacilities() {
         return facilityRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all facilities with optional filtering by type and status.
+     *
+     * @param type   filter by facility type (optional, null = all types)
+     * @param status filter by facility status (optional, null = all statuses)
+     * @return list of matching facility responses
+     */
+    @Transactional(readOnly = true)
+    public List<FacilityDTO.FacilityResponse> getAllFacilitiesFiltered(
+            FacilityEnums.FacilityType type,
+            FacilityEnums.FacilityStatus status) {
+        
+        // If no filters are provided, return all facilities
+        if (type == null && status == null) {
+            return getAllFacilities();
+        }
+        
+        // If only type filter is provided
+        if (type != null && status == null) {
+            return facilityRepository.findByFacilityType(type)
+                    .stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
+        
+        // If only status filter is provided
+        if (type == null && status != null) {
+            return facilityRepository.findByStatus(status)
+                    .stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
+        
+        // If both filters are provided
+        return facilityRepository.findByFacilityTypeAndStatus(type, status)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -178,6 +242,103 @@ public class FacilityService {
         log.info("Facility deleted: {} (id: {})", entity.getName(), entity.getId());
     }
 
+    // ==================== Availability Check ====================
+
+    /**
+     * Check if a facility is available during a requested time slot.
+     *
+     * @param id the facility ID
+     * @param request the availability request with bookingDate, startTime, endTime
+     * @return availability response with status and message
+     */
+    @Transactional(readOnly = true)
+    public FacilityDTO.AvailabilityResponse checkAvailability(
+            Long id, FacilityDTO.AvailabilityRequest request) {
+
+        FacilityEntity facility = findEntityById(id);
+
+        // Check if facility is active
+        if (facility.getStatus() != FacilityEnums.FacilityStatus.ACTIVE) {
+            return FacilityDTO.AvailabilityResponse.builder()
+                    .available(false)
+                    .message("Facility is not currently active")
+                    .facilityOpenFrom(facility.getAvailableFrom())
+                    .facilityOpenUntil(facility.getAvailableTo())
+                    .requestedTimeSlot(request.getStartTime() + " - " + request.getEndTime())
+                    .build();
+        }
+
+        // Parse requested times
+        java.time.LocalTime requestedStart = java.time.LocalTime.parse(request.getStartTime());
+        java.time.LocalTime requestedEnd = java.time.LocalTime.parse(request.getEndTime());
+
+        // Check if facility has availability window set
+        if (facility.getAvailableFrom() == null || facility.getAvailableTo() == null) {
+            return FacilityDTO.AvailabilityResponse.builder()
+                    .available(true)
+                    .message("Facility is available (no time restrictions)")
+                    .facilityOpenFrom(null)
+                    .facilityOpenUntil(null)
+                    .requestedTimeSlot(request.getStartTime() + " - " + request.getEndTime())
+                    .build();
+        }
+
+        // Check if requested time slot is within facility's available window
+        boolean isAvailable = (requestedStart.isAfter(facility.getAvailableFrom()) ||
+                requestedStart.equals(facility.getAvailableFrom())) &&
+                (requestedEnd.isBefore(facility.getAvailableTo()) ||
+                        requestedEnd.equals(facility.getAvailableTo()));
+
+        String message = isAvailable
+                ? "Facility is available for the requested time slot"
+                : String.format("Facility is only available from %s to %s",
+                facility.getAvailableFrom(), facility.getAvailableTo());
+
+        return FacilityDTO.AvailabilityResponse.builder()
+                .available(isAvailable)
+                .message(message)
+                .facilityOpenFrom(facility.getAvailableFrom())
+                .facilityOpenUntil(facility.getAvailableTo())
+                .requestedTimeSlot(request.getStartTime() + " - " + request.getEndTime())
+                .build();
+    }
+
+    /**
+     * Upload a facility image and return its public URL.
+     */
+    public FacilityDTO.ImageUploadResponse uploadFacilityImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Please select an image file to upload.");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
+            throw new IllegalArgumentException(
+                    "Only JPG, PNG, GIF, and WEBP images are allowed.");
+        }
+
+        String originalFileName = file.getOriginalFilename();
+        String extension = getFileExtension(originalFileName);
+        String generatedFileName = UUID.randomUUID() + extension;
+
+        Path uploadPath = Paths.get(fileUploadDir, "facilities").toAbsolutePath().normalize();
+        Path targetPath = uploadPath.resolve(generatedFileName);
+
+        try {
+            Files.createDirectories(uploadPath);
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            log.error("Failed to store facility image {}", originalFileName, ex);
+            throw new RuntimeException("Failed to upload facility image.", ex);
+        }
+
+        String imageUrl = "/uploads/facilities/" + generatedFileName;
+        return FacilityDTO.ImageUploadResponse.builder()
+                .imageUrl(imageUrl)
+                .fileName(generatedFileName)
+                .build();
+    }
+
     // ==================== Helper Methods ====================
 
     /**
@@ -235,10 +396,20 @@ public class FacilityService {
         }
     }
 
+    private String getFileExtension(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            return ".png";
+        }
+        return fileName.substring(fileName.lastIndexOf('.'));
+    }
+
     /**
      * Map a FacilityEntity to a FacilityResponse DTO.
      */
     private FacilityDTO.FacilityResponse mapToResponse(FacilityEntity entity) {
+        int healthScore = calculateHealthScore(entity);
+        List<String> improvementSuggestions = buildImprovementSuggestions(entity);
+
         return FacilityDTO.FacilityResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
@@ -251,8 +422,104 @@ public class FacilityService {
                 .availableFrom(entity.getAvailableFrom())
                 .availableTo(entity.getAvailableTo())
                 .imageUrl(entity.getImageUrl())
+                .healthScore(healthScore)
+                .improvementSuggestions(improvementSuggestions)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+
+    private int calculateHealthScore(FacilityEntity entity) {
+        int score = 100;
+
+        if (entity.getStatus() == FacilityEnums.FacilityStatus.MAINTENANCE) {
+            score -= 20;
+        } else if (entity.getStatus() == FacilityEnums.FacilityStatus.OUT_OF_SERVICE) {
+            score -= 40;
+        }
+
+        if (isBlank(entity.getDescription())) {
+            score -= 15;
+        } else if (entity.getDescription().trim().length() < 40) {
+            score -= 5;
+        }
+
+        if (isBlank(entity.getImageUrl())) {
+            score -= 10;
+        }
+
+        if (isBlank(entity.getLocation())) {
+            score -= 15;
+        }
+
+        if (entity.getCapacity() == null || entity.getCapacity() <= 0) {
+            score -= 10;
+        }
+
+        if (entity.getFacilityType() == FacilityEnums.FacilityType.EQUIPMENT && entity.getAssetType() == null) {
+            score -= 10;
+        }
+
+        if (entity.getAvailableFrom() == null || entity.getAvailableTo() == null) {
+            score -= 10;
+        } else {
+            long openHours = Duration.between(entity.getAvailableFrom(), entity.getAvailableTo()).toHours();
+            if (openHours < 4) {
+                score -= 10;
+            } else if (openHours < 8) {
+                score -= 5;
+            }
+        }
+
+        return Math.max(0, Math.min(100, score));
+    }
+
+    private List<String> buildImprovementSuggestions(FacilityEntity entity) {
+        List<String> suggestions = new ArrayList<>();
+
+        if (entity.getStatus() == FacilityEnums.FacilityStatus.MAINTENANCE) {
+            suggestions.add("Return this facility to ACTIVE status once maintenance is complete.");
+        } else if (entity.getStatus() == FacilityEnums.FacilityStatus.OUT_OF_SERVICE) {
+            suggestions.add("Resolve operational issues before making this facility available again.");
+        }
+
+        if (isBlank(entity.getDescription())) {
+            suggestions.add("Add a clear description so users understand what this facility is for.");
+        } else if (entity.getDescription().trim().length() < 40) {
+            suggestions.add("Expand the description with more useful operational details.");
+        }
+
+        if (isBlank(entity.getImageUrl())) {
+            suggestions.add("Upload a facility image to improve recognition and trust.");
+        }
+
+        if (isBlank(entity.getLocation())) {
+            suggestions.add("Add a precise location to make the facility easier to find.");
+        }
+
+        if (entity.getCapacity() == null || entity.getCapacity() <= 0) {
+            suggestions.add("Set a realistic capacity so users can judge suitability quickly.");
+        }
+
+        if (entity.getFacilityType() == FacilityEnums.FacilityType.EQUIPMENT && entity.getAssetType() == null) {
+            suggestions.add("Set an asset type for equipment so it can be categorized correctly.");
+        }
+
+        if (entity.getAvailableFrom() == null || entity.getAvailableTo() == null) {
+            suggestions.add("Configure operating hours so availability is clear to users.");
+        } else {
+            long openHours = Duration.between(entity.getAvailableFrom(), entity.getAvailableTo()).toHours();
+            if (openHours < 4) {
+                suggestions.add("Consider extending the operating window; this facility is available for less than 4 hours.");
+            } else if (openHours < 8) {
+                suggestions.add("Consider widening the operating hours to improve accessibility.");
+            }
+        }
+
+        return suggestions;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }
