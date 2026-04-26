@@ -273,6 +273,10 @@ export default function AdminDashboard() {
 
   const handleIncidentStatusUpdate = async (incident, nextStatus) => {
     if (incident.status === nextStatus) return;
+    if (incident.adminLocked) {
+      alert('Admin updates are locked for this ticket.');
+      return;
+    }
 
     const payload = { status: nextStatus };
     if (nextStatus === 'RESOLVED' || nextStatus === 'REJECTED') {
@@ -290,10 +294,35 @@ export default function AdminDashboard() {
 
     try {
       setIncidentStatusUpdating((prev) => ({ ...prev, [incident.id]: true }));
-      await updateStatus(incident.id, payload);
-      await fetchIncidents();
+      const res = await updateStatus(incident.id, payload);
+      const updated = res.data?.data;
+
+      // Reflect status + lock immediately to prevent a second blocked update attempt.
+      setIncidents((prev) =>
+        prev.map((item) =>
+          item.id === incident.id
+            ? {
+                ...item,
+                ...(updated || {}),
+                status: updated?.status || nextStatus,
+                resolutionNotes: payload.resolutionNotes ?? item.resolutionNotes,
+                adminLocked: true,
+              }
+            : item
+        )
+      );
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update incident status.');
+      const message = err.response?.data?.message || 'Failed to update incident status.';
+      if (String(message).toLowerCase().includes('locked')) {
+        setIncidents((prev) =>
+          prev.map((item) =>
+            item.id === incident.id
+              ? { ...item, adminLocked: true }
+              : item
+          )
+        );
+      }
+      alert(message);
     } finally {
       setIncidentStatusUpdating((prev) => ({ ...prev, [incident.id]: false }));
     }
